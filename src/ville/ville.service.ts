@@ -18,6 +18,15 @@ export class VilleService {
     return createdVille.save();
   }
 
+  async getQuartierByVille(villeId: string): Promise<Quartier[]> {
+    const ville = await this.villeModel.findById(villeId).populate('quartiers').exec();
+    if (!ville) {
+      throw new NotFoundException(`Region with id ${villeId} not found`);
+    }
+  
+    return ville.quartiers;
+  }
+
   async addQuartierToVille(villeId: string, quartierDto: any): Promise<Ville> {
     const ville = await this.villeModel.findById(villeId).exec();
     if (!ville) {

@@ -18,6 +18,15 @@ export class RegionService {
     return createdRegion.save();
   }
 
+  async getVillesByRegion(regionId: string): Promise<Ville[]> {
+    const region = await this.regionModel.findById(regionId).populate('villes').exec();
+    if (!region) {
+      throw new NotFoundException(`Region with id ${regionId} not found`);
+    }
+  
+    return region.villes;
+  }
+
   async addVilleToRegion(regionId: string, villeDto: any): Promise<Region> {
     const region = await this.regionModel.findById(regionId).exec();
     if (!region) {

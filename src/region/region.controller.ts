@@ -22,6 +22,11 @@ export class RegionController {
     return this.regionService.deleteVilleFromRegion(regionId, villeId);
   }
 
+  @Get(':regionId/villes')
+  async getVillesByRegion(@Param('regionId') regionId: string) {
+    return this.regionService.getVillesByRegion(regionId);
+  }
+
   @Get()
   async findAll() {
     return this.regionService.findAll();

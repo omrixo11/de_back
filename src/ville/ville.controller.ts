@@ -22,6 +22,11 @@ export class VilleController {
     return this.villeService.deleteQuartierFromVille(villeId, quartierId);
   }
 
+  @Get(':villeId/quartiers')
+  async getQuartierByVille(@Param('villeId') villeId: string) {
+    return this.villeService.getQuartierByVille(villeId);
+  }
+
   @Get()
   async findAll() {
     return this.villeService.findAll();

@@ -7,7 +7,7 @@ export enum RegionNames {
 
   Ariana = 'Ariana',
   Béja = 'Béja',
-  BenArous = 'BenArous',
+  BenArous = 'Ben Arous',
   Bizerte = 'Bizerte',
   Gabès = 'Gabès',
   Gafsa = 'Gafsa',

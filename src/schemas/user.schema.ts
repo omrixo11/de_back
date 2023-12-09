@@ -11,7 +11,6 @@ export enum BillingCycle {
   Yearly = 'yearly',
 }
 
-
 @Schema({ timestamps: true })
 export class User extends Document {
 
@@ -59,6 +58,10 @@ export class User extends Document {
 
   @Prop({ enum: BillingCycle, default: BillingCycle.Monthly })
   billingCycle: BillingCycle;
+
+  //role
+  @Prop({ type: [String], default: ['user'] })
+  roles: string[];
   
 }
 

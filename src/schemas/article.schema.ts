@@ -4,7 +4,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
 
-export enum ArticleType {
+export enum PropertyType {
 
     Appartement = 'Appartement',
     Bureau = 'Bureau',
@@ -20,29 +20,47 @@ export enum ArticleType {
 
 }
 
-export enum EtatArticle {
+export enum EtatPropriete {
+
     Neuf = 'Neuf',
-    Ancien = 'Ancien',
+    BonEtat = 'BonEtat',
+    ARenover = 'ARenover',
+    EnConstruction = 'EnConstruction',
+
 }
 
-export enum TypeExercice {
+export enum NaturePropriete {
+
     Habitation = 'Habitation',
     Profesionnels = 'Profesionnels',
     Vacances = 'Vacances',
+    Terrain = 'Terrain',
+    Industrielle = 'Industrielle',
+
+}
+
+export enum TransactionType {
+
+    Location = 'Location',
+    Vente = 'Vente',
+
 }
 
 @Schema({ timestamps: true })
 export class Article extends Document {
 
     // enum
-    @Prop({ required: true })
-    type: ArticleType;
+    @Prop({ required: true, type: [String], enum: Object.values(PropertyType) })
+    propertyType: PropertyType[];
+
+    @Prop({ required: true, type: [String], enum: Object.values(NaturePropriete) })
+    naturePropriete: NaturePropriete[];
 
     @Prop({ required: true })
-    etatArticle: EtatArticle;
+    etatPropriete: EtatPropriete;
 
     @Prop({ required: true })
-    typeExercice: TypeExercice;
+    transactionType: TransactionType;
 
     // article infos
     @Prop({ required: true })
@@ -71,7 +89,7 @@ export class Article extends Document {
 
     // @Prop({ required: true })
     // notenp: string;
-    
+
     //Options:::::
     @Prop({ default: false })
     isClimatisation: boolean;
@@ -89,13 +107,16 @@ export class Article extends Document {
     isAscenceur: boolean;
 
     @Prop({ default: false })
-    isSecurite: boolean;
+    isCameraSurveillance: boolean;
 
     @Prop({ default: false })
     isCuisineEquiper: boolean;
 
     @Prop({ default: false })
     isFour: boolean;
+
+    @Prop({ default: false })
+    isHotte: boolean;
 
     @Prop({ default: false })
     isConcierge: boolean;
@@ -119,7 +140,7 @@ export class Article extends Document {
     isMachineLaver: boolean;
 
     @Prop({ default: false })
-    Cheminer: boolean;
+    isCheminer: boolean;
 
     @Prop({ default: false })
     isRefrigerateur: boolean

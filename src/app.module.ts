@@ -8,12 +8,9 @@ import { UserAuthModule } from './auth/user/user-auth.module';
 import { ArticleModule } from './article/article.module'
 import { UserModule } from './user/user.module';
 import { PlanModule } from './plan/plan.module';
-import { KonnectModule } from './konnect/konnect.module';
 import { VilleModule } from './ville/ville.module';
 import { RegionModule } from './region/region.module';
 import { QuartierModule } from './quartier/quartier.module';
-
-
 
 @Module({
   imports: [
@@ -27,8 +24,7 @@ import { QuartierModule } from './quartier/quartier.module';
     UserAuthModule,
     UserModule,
     ArticleModule,
-    PlanModule,
-    KonnectModule,
+    PlanModule,   
     VilleModule,
     RegionModule,
     QuartierModule,

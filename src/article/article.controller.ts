@@ -8,7 +8,7 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('articles')
 export class ArticleController {
-  constructor(private readonly articleService: ArticleService) {}
+  constructor(private readonly articleService: ArticleService) { }
 
   @Post()
   @UseInterceptors(FilesInterceptor('images', 10))
@@ -24,7 +24,7 @@ export class ArticleController {
 
   @Get()
   findAll() {
-    return this.articleService.findAll();
+    return this.articleService.findAllWithImages();
   }
 
   @Get(':id')

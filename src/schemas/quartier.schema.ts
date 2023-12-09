@@ -9,12 +9,6 @@ export class Quartier extends Document {
     @Prop({ required: true })
     name: string;
 
-    @Prop({ required: true })
-    longitude: string;
-
-    @Prop({ required: true })
-    latitude: string;
-
 }
 
 export const QuartierSchema = SchemaFactory.createForClass(Quartier);
