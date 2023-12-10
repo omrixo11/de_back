@@ -2,6 +2,8 @@
 
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import * as mongoose from 'mongoose';
+
 
 
 export enum PropertyType {
@@ -49,6 +51,8 @@ export enum TransactionType {
 @Schema({ timestamps: true })
 export class Article extends Document {
 
+
+
     // enum
     @Prop({ required: true, type: [String], enum: Object.values(PropertyType) })
     propertyType: PropertyType[];
@@ -61,16 +65,34 @@ export class Article extends Document {
 
     @Prop({ required: true })
     transactionType: TransactionType;
+   
 
-    // article infos
+    ////adress
+    @Prop({ required: true })
+    adress: string;
+
+    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Region' })
+    region: Types.ObjectId;
+
+    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Ville' })
+    ville: Types.ObjectId;
+
+    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Quartier' })
+    quartier: Types.ObjectId;
+
+
+
     @Prop({ required: true })
     title: string;
 
     @Prop({ required: true })
-    adress: string;
+    description: string;
+
+    @Prop({})
+    notes: string;
 
     @Prop({ required: true })
-    description: string;
+    neighborhood: string
 
     @Prop({ required: true })
     bathrooms: number;
@@ -79,18 +101,16 @@ export class Article extends Document {
     bedrooms: number;
 
     @Prop({ required: true })
-    neighborhood: string
-
-    @Prop({ required: true })
     surface: number;
 
     @Prop({ required: true })
     price: number;
 
-    // @Prop({ required: true })
-    // notenp: string;
+    @Prop({ type: [String] })
+    images: string[];
 
-    //Options:::::
+
+    //Extra Options:::::
     @Prop({ default: false })
     isClimatisation: boolean;
 
@@ -163,9 +183,6 @@ export class Article extends Document {
 
     @Prop({ default: false })
     isAccepted: boolean;
-
-    @Prop({ type: [String] })
-    images: string[];
 
 }
 
