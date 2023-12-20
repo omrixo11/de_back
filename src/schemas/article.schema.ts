@@ -3,6 +3,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import * as mongoose from 'mongoose';
+import { User } from './user.schema';
 
 
 
@@ -51,7 +52,8 @@ export enum TransactionType {
 @Schema({ timestamps: true })
 export class Article extends Document {
 
-
+    @Prop({ type: Types.ObjectId, ref: 'User' })
+    user: Types.ObjectId;
 
     // enum
     @Prop({ required: true, type: [String], enum: Object.values(PropertyType) })
@@ -65,7 +67,7 @@ export class Article extends Document {
 
     @Prop({ required: true })
     transactionType: TransactionType;
-   
+
 
     ////adress
     @Prop({ required: true })
@@ -80,6 +82,7 @@ export class Article extends Document {
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Quartier' })
     quartier: Types.ObjectId;
 
+    ////
 
 
     @Prop({ required: true })
@@ -90,9 +93,6 @@ export class Article extends Document {
 
     @Prop({})
     notes: string;
-
-    @Prop({ required: true })
-    neighborhood: string
 
     @Prop({ required: true })
     bathrooms: number;
@@ -106,9 +106,14 @@ export class Article extends Document {
     @Prop({ required: true })
     price: number;
 
+    @Prop({ required: true })
+    availableFrom: Date;
+
     @Prop({ type: [String] })
     images: string[];
 
+    @Prop({})
+    costumId: string;
 
     //Extra Options:::::
     @Prop({ default: false })

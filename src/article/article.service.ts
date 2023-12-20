@@ -5,18 +5,38 @@ import { UpdateArticleDto } from './dto/update-article.dto';
 import { Article, ArticleSchema } from 'src/schemas/article.schema';
 import { Model } from 'mongoose';
 import { promises as fsPromises } from 'fs';
+import { User } from 'src/schemas/user.schema';
 import * as path from 'path';
 import * as Jimp from 'jimp';
 
 @Injectable()
 export class ArticleService {
-  constructor(@InjectModel(Article.name) private articleModel: Model<Article>) { }
+  constructor(@InjectModel(Article.name) private articleModel: Model<Article>,
+    @InjectModel(User.name) private userModel: Model<User>,
+  ) { }
 
-  async createArticle(createArticleDto: CreateArticleDto, imageFiles: Express.Multer.File[]): Promise<Article> {
-    const createdArticle = new this.articleModel(createArticleDto);
+  async createArticle(
+    createArticleDto: CreateArticleDto,
+    imageFiles: Express.Multer.File[],
+    userId: string,
+  ): Promise<Article> {
+    const createdArticle = new this.articleModel({
+      ...createArticleDto,
+      user: userId,
+    });
+
     createdArticle.images = await this.saveArticleImages(imageFiles);
-    return await createdArticle.save();
+    const savedArticle = await createdArticle.save();
+
+    const user = await this.userModel.findById(userId).exec();
+    if (user) {
+      user.articles.push(savedArticle._id);
+      await user.save();
+    }
+
+    return savedArticle;
   }
+
 
   async uploadImages(id: string, imageFiles: Express.Multer.File[]): Promise<Article> {
     const article = await this.articleModel.findById(id).exec();
@@ -32,70 +52,77 @@ export class ArticleService {
   private async saveArticleImages(imageFiles: Express.Multer.File[]): Promise<string[]> {
     const savedImages: string[] = [];
     const mediaFolderPath = path.join(__dirname, '..', '..', 'media', 'articles-images');
-  
+
     console.log('Media Folder Path:', mediaFolderPath);
-  
+
     // Ensure the media folder exists
     await fsPromises.mkdir(mediaFolderPath, { recursive: true });
-  
+
     if (!imageFiles || !Array.isArray(imageFiles)) {
       throw new Error('No valid image files provided.');
     }
-  
+
     for (const imageFile of imageFiles) {
       if (!imageFile.buffer || !imageFile.originalname) {
         console.error('Invalid image file:', imageFile);
         continue; // Skip invalid image files
       }
-  
+
       const image = await Jimp.read(imageFile.buffer);
       const watermark = await Jimp.read('media/water-marks/waterMark1.png'); // water mark path
-  
+
       // Calculate the size of the watermark to cover the entire image while maintaining the original aspect ratio
       const watermarkWidth = image.getWidth();
       const watermarkHeight = (watermarkWidth / watermark.getWidth()) * watermark.getHeight();
-  
+
       // Resize watermark
       watermark.resize(watermarkWidth, watermarkHeight);
-  
+
       // Composite the watermark onto the image at the center
       const x = (image.getWidth() - watermark.getWidth()) / 2;
       const y = (image.getHeight() - watermark.getHeight()) / 2;
       image.composite(watermark, x, y);
-  
+
       const imageFileName = `${Date.now()}_${imageFile.originalname}`;
       const imagePath = path.join(mediaFolderPath, imageFileName);
-  
+
       // Save the image with watermark
       await image.writeAsync(imagePath);
       savedImages.push(imageFileName);
     }
-  
+
     return savedImages;
   }
 
   async findAllWithImages(): Promise<Article[]> {
-    const articles = await this.articleModel.find().exec();
-  
+    const articles = await this.articleModel
+      .find()
+      .populate('user')
+      .populate('region')
+      .populate('ville')
+      .populate('quartier')
+      .exec();
+
     for (const article of articles) {
-      if (!article.images) {
+      if (!article.images || article.images.length === 0) {
         article.images = await this.saveArticleImages([]);
       }
     }
-  
+
     const articlesWithImages = articles.map((article) => {
       const images = article.images.map((filename) => {
         return `http://localhost:5001/media/articles-images/${filename}`;
       });
-  
+
       return {
         ...article.toJSON(),
         images,
       };
     });
-  
+
     return articlesWithImages;
   }
+
 
   async findAll(): Promise<Article[]> {
     return this.articleModel.find().exec();

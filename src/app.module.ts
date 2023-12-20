@@ -20,7 +20,6 @@ import { QuartierModule } from './quartier/quartier.module';
       secret: '1234567890@qwertyuiop',
       signOptions: { expiresIn: '2h' },
     }),
-    
     UserAuthModule,
     UserModule,
     ArticleModule,

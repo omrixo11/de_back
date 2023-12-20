@@ -1,19 +1,26 @@
 // In article.controller.ts
 
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFiles } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFiles, Request, UseGuards } from '@nestjs/common';
 import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { AuthGuard } from 'src/auth/user/user-auth.guard';
 
 @Controller('articles')
 export class ArticleController {
   constructor(private readonly articleService: ArticleService) { }
 
   @Post()
+  @UseGuards(AuthGuard)
   @UseInterceptors(FilesInterceptor('images', 10))
-  create(@Body() createArticleDto: CreateArticleDto, @UploadedFiles() imageFiles: Express.Multer.File[]) {
-    return this.articleService.createArticle(createArticleDto, imageFiles);
+  create(
+    @Body() createArticleDto: CreateArticleDto,
+    @UploadedFiles() imageFiles: Express.Multer.File[],
+    @Request() req: any,
+  ) {
+    const userId = req.user._id;
+    return this.articleService.createArticle(createArticleDto, imageFiles, userId);
   }
 
   @Post(':id/upload-images')

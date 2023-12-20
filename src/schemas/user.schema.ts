@@ -14,12 +14,12 @@ export enum BillingCycle {
 @Schema({ timestamps: true })
 export class User extends Document {
 
-  @Prop({ required: true})
+  @Prop({ required: true })
   email: string;
 
   @Prop({ required: true, validate: { validator: isPasswordValid, message: 'Password must be at least 8 characters long' } })
   password: string;
-  
+
   @Prop({ trim: true })
   firstName: string;
 
@@ -35,8 +35,8 @@ export class User extends Document {
   @Prop({ default: false })
   isOnPlan: boolean;
 
-  @Prop({ type: [ArticleSchema], default: [] }) 
-  articles: Article[];
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Article' }] })
+  articles: Types.ObjectId[];
 
   /////auth conf
   @Prop({ default: null })
@@ -62,7 +62,7 @@ export class User extends Document {
   //role
   @Prop({ type: [String], default: ['user'] })
   roles: string[];
-  
+
 }
 
 function isPasswordValid(password: string): boolean {
