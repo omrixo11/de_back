@@ -6,6 +6,7 @@ export class CreateArticleDto {
 
     propertyType: PropertyType[];
     naturePropriete: NaturePropriete[];
+    
     etatPropriete: EtatPropriete;
     transactionType: TransactionType;
 

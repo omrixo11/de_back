@@ -62,13 +62,16 @@ export class ArticleService {
       throw new Error('No valid image files provided.');
     }
 
+
     for (const imageFile of imageFiles) {
+
       if (!imageFile.buffer || !imageFile.originalname) {
         console.error('Invalid image file:', imageFile);
         continue; // Skip invalid image files
       }
 
       const image = await Jimp.read(imageFile.buffer);
+
       const watermark = await Jimp.read('media/water-marks/waterMark1.png'); // water mark path
 
       // Calculate the size of the watermark to cover the entire image while maintaining the original aspect ratio

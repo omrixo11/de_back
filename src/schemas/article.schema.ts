@@ -62,16 +62,17 @@ export class Article extends Document {
     @Prop({ required: true, type: [String], enum: Object.values(NaturePropriete) })
     naturePropriete: NaturePropriete[];
 
-    @Prop({ required: true })
+    @Prop({ required: true, type: String, enum: Object.values(EtatPropriete) })
     etatPropriete: EtatPropriete;
-
-    @Prop({ required: true })
+  
+    @Prop({ required: true, type: String, enum: Object.values(TransactionType) })
     transactionType: TransactionType;
+  
 
 
     ////adress
-    @Prop({ required: true })
-    adress: string;
+    @Prop({ })
+    adressExact: string;
 
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Region' })
     region: Types.ObjectId;
