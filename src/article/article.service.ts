@@ -126,7 +126,6 @@ export class ArticleService {
     return articlesWithImages;
   }
 
-
   async findAll(): Promise<Article[]> {
     return this.articleModel.find().exec();
   }
