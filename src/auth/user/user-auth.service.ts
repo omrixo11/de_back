@@ -75,7 +75,7 @@ export class UserAuthService {
   private async sendConfirmationEmail(email: string, confirmationCode: string): Promise<void> {
     console.log("email:", email);
 
-    const subject = 'Confirm your email';
+    const subject = 'Confirmation email';
     const html = confirmationEmailTemplate(confirmationCode);
     // You can use your nodemailer logic here
     await this.nodeMailerService.sendEmail(email, subject, html);
@@ -105,17 +105,17 @@ export class UserAuthService {
     return jwt.sign(payload, secret, { expiresIn });
   }
 
-  async sendVerificationCodeSms(phoneNumber: string, verificationCode: string): Promise<void> {
-    const smsBody = `Your verification code is: ${verificationCode}`;
+  // async sendVerificationCodeSms(phoneNumber: string, verificationCode: string): Promise<void> {
+  //   const smsBody = `Your verification code is: ${verificationCode}`;
 
-    try {
-      await sendSms({ to: phoneNumber, body: smsBody });
-    } catch (error) {
-      // Handle error sending SMS
-      console.error('Error sending verification code via SMS:', error);
-      throw new Error('Error sending verification code');
-    }
-  }
+  //   try {
+  //     await sendSms({ to: phoneNumber, body: smsBody });
+  //   } catch (error) {
+  //     // Handle error sending SMS
+  //     console.error('Error sending verification code via SMS:', error);
+  //     throw new Error('Error sending verification code');
+  //   }
+  // }
 
   // Reset password logic
   generateResetToken(): string {
@@ -127,7 +127,7 @@ export class UserAuthService {
   }
 
   async sendPasswordResetEmail(email: string, resetToken: string): Promise<void> {
-    const subject = 'Password Reset';
+    const subject = 'Réinitialisation de mot de passe';
     const html = passwordResetEmailTemplate(resetToken);
 
     try {
@@ -151,7 +151,7 @@ export class UserAuthService {
     }
 
     // Update user password and reset token
-    user.password = newPassword; // Assuming newPassword is already plain text
+    user.password = newPassword;
     user.resetPasswordToken = null;
     user.resetPasswordExpires = null;
 
@@ -160,6 +160,5 @@ export class UserAuthService {
 
     return user;
   }
-
 
 }

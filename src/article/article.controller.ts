@@ -34,6 +34,13 @@ export class ArticleController {
     return this.articleService.findAllWithImages();
   }
 
+  @Get('user-articles')
+  @UseGuards(AuthGuard)
+  findUserArticles(@Request() req: any) {
+    const userId = req.user._id;
+    return this.articleService.findUserArticles(userId);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.articleService.findOne(id);
@@ -48,4 +55,13 @@ export class ArticleController {
   remove(@Param('id') id: string) {
     return this.articleService.remove(id);
   }
+  
+  @Delete(':id/user-article')
+  @UseGuards(AuthGuard)
+  removeUserArticle(@Param('id') id: string, @Request() req: any) {
+    const userId = req.user._id;
+    return this.articleService.removeUserArticle(userId, id);
+  }
+
+  
 }

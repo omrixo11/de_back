@@ -141,4 +141,23 @@ export class UserAuthController {
     }
   }
 
+  @Post('check-email-existence')
+  @HttpCode(HttpStatus.OK)
+  async checkEmailExistence(@Body() body: { email: string }) {
+    const { email } = body;
+
+    try {
+      const user = await this.userAuthService.findUserByEmail(email);
+
+      return {
+        exists: !!user, // Convert to boolean
+      };
+    } catch (error) {
+      return {
+        exists: false,
+        error: error.message,
+      };
+    }
+  }
+
 }

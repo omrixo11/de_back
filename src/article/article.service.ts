@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
@@ -126,6 +126,34 @@ export class ArticleService {
     return articlesWithImages;
   }
 
+  async findUserArticles(userId: string): Promise<Article[]> {
+    const articles = await this.articleModel
+      .find({ user: userId })
+      .populate('user')
+      .populate('region')
+      .populate('ville')
+      .populate('quartier')
+      .exec();
+    for (const article of articles) {
+      if (!article.images || article.images.length === 0) {
+        article.images = await this.saveArticleImages([]);
+      }
+    }
+
+    const articlesWithImages = articles.map((article) => {
+      const images = article.images.map((filename) => {
+        return `http://localhost:5001/media/articles-images/${filename}`;
+      });
+
+      return {
+        ...article.toJSON(),
+        images,
+      };
+    });
+
+    return articlesWithImages;
+  }
+
   async findAll(): Promise<Article[]> {
     return this.articleModel.find().exec();
   }
@@ -141,4 +169,52 @@ export class ArticleService {
   async remove(id: string): Promise<Article> {
     return this.articleModel.findByIdAndRemove(id).exec();
   }
+
+  async removeUserArticle(userId: string, articleId: string): Promise<Article> {
+    // Find the article by ID
+    const article = await this.articleModel.findById(articleId).exec();
+  
+    if (!article) {
+      console.log('Article not found');
+      throw new NotFoundException('Article not found');
+    }
+  
+    // Check if the article belongs to the requesting user
+    if (article.user.toString() !== userId) {
+      console.log('Unauthorized: User cannot delete this article');
+      throw new UnauthorizedException('Unauthorized: User cannot delete this article');
+    }
+  
+    // Remove the associated images
+    await this.deleteArticleImages(article.images);
+  
+    // Remove the article from the user's articles array
+    const user = await this.userModel.findById(userId).exec();
+    if (user) {
+      user.articles = user.articles.filter((userArticle) => userArticle.toString() !== articleId);
+      await user.save();
+    }
+  
+    // Remove the article from the database
+    return this.articleModel.findByIdAndRemove(articleId).exec();
+  }
+  
+
+  private async deleteArticleImages(images: string[]): Promise<void> {
+    const mediaFolderPath = path.join(__dirname, '..', '..', 'media', 'articles-images');
+  
+    for (const imageFileName of images) {
+      const imagePath = path.join(mediaFolderPath, imageFileName);
+  
+      try {
+        // Delete the image file
+        await fsPromises.unlink(imagePath);
+        console.log(`Deleted image: ${imageFileName}`);
+      } catch (error) {
+        console.error(`Error deleting image ${imageFileName}: ${error.message}`);
+      }
+    }
+  }
+  
+
 }
