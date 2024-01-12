@@ -67,8 +67,6 @@ export class Article extends Document {
   
     @Prop({ required: true, type: String, enum: Object.values(TransactionType) })
     transactionType: TransactionType;
-  
-
 
     ////adress
     @Prop({ })
@@ -82,9 +80,6 @@ export class Article extends Document {
 
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Quartier' })
     quartier: Types.ObjectId;
-
-    ////
-
 
     @Prop({ required: true })
     title: string;

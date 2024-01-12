@@ -104,27 +104,29 @@ export class ArticleService {
       .populate('region')
       .populate('ville')
       .populate('quartier')
+      .sort({ createdAt: -1 }) // Sort 
       .exec();
-
+  
     for (const article of articles) {
       if (!article.images || article.images.length === 0) {
         article.images = await this.saveArticleImages([]);
       }
     }
-
+  
     const articlesWithImages = articles.map((article) => {
       const images = article.images.map((filename) => {
         return `http://localhost:5001/media/articles-images/${filename}`;
       });
-
+  
       return {
         ...article.toJSON(),
         images,
       };
     });
-
+  
     return articlesWithImages;
   }
+  
 
   async findUserArticles(userId: string): Promise<Article[]> {
     const articles = await this.articleModel
@@ -133,6 +135,7 @@ export class ArticleService {
       .populate('region')
       .populate('ville')
       .populate('quartier')
+      .sort({ createdAt: -1 })
       .exec();
     for (const article of articles) {
       if (!article.images || article.images.length === 0) {
@@ -159,8 +162,33 @@ export class ArticleService {
   }
 
   async findOne(id: string): Promise<Article> {
-    return this.articleModel.findById(id).exec();
+    const article = await this.articleModel.findById(id)
+      .populate('user')
+      .populate('region')
+      .populate('ville')
+      .populate('quartier')
+      .exec();
+  
+    if (!article) {
+      return null; 
+    }
+  
+    if (!article.images || article.images.length === 0) {
+      article.images = await this.saveArticleImages([]);
+    }
+  
+    const images = article.images.map((filename) => {
+      return `http://localhost:5001/media/articles-images/${filename}`;
+    });
+  
+    const articleWithImages = {
+      ...article.toJSON(),
+      images,
+    };
+  
+    return articleWithImages;
   }
+  
 
   async update(id: string, updateArticleDto: UpdateArticleDto) {
     return this.articleModel.findByIdAndUpdate(id, updateArticleDto);
