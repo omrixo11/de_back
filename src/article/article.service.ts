@@ -49,53 +49,108 @@ export class ArticleService {
   }
 
 
+  // private async saveArticleImages(imageFiles: Express.Multer.File[]): Promise<string[]> {
+  //   const savedImages: string[] = [];
+  //   const mediaFolderPath = path.join(__dirname, '..', '..', 'media', 'articles-images');
+
+  //   console.log('Media Folder Path:', mediaFolderPath);
+
+  //   // Ensure the media folder exists
+  //   await fsPromises.mkdir(mediaFolderPath, { recursive: true });
+
+  //   if (!imageFiles || !Array.isArray(imageFiles)) {
+  //     throw new Error('No valid image files provided.');
+  //   }
+
+
+  //   for (const imageFile of imageFiles) {
+
+  //     if (!imageFile.buffer || !imageFile.originalname) {
+  //       console.error('Invalid image file:', imageFile);
+  //       continue; // Skip invalid image files
+  //     }
+
+  //     const image = await Jimp.read(imageFile.buffer);
+
+  //     const watermark = await Jimp.read('media/water-marks/waterMark1.png'); // water mark path
+
+  //     // Calculate the size of the watermark to cover the entire image while maintaining the original aspect ratio
+  //     const watermarkWidth = image.getWidth();
+  //     const watermarkHeight = (watermarkWidth / watermark.getWidth()) * watermark.getHeight();
+
+  //     // Resize watermark
+  //     watermark.resize(watermarkWidth, watermarkHeight);
+
+  //     // Composite the watermark onto the image at the center
+  //     const x = (image.getWidth() - watermark.getWidth()) / 2;
+  //     const y = (image.getHeight() - watermark.getHeight()) / 2;
+  //     image.composite(watermark, x, y);
+
+  //     const imageFileName = `${Date.now()}_${imageFile.originalname}`;
+  //     const imagePath = path.join(mediaFolderPath, imageFileName);
+
+  //     // Save the image with watermark
+  //     await image.writeAsync(imagePath);
+  //     savedImages.push(imageFileName);
+  //   }
+
+  //   return savedImages;
+  // }
+
   private async saveArticleImages(imageFiles: Express.Multer.File[]): Promise<string[]> {
     const savedImages: string[] = [];
     const mediaFolderPath = path.join(__dirname, '..', '..', 'media', 'articles-images');
-
+    const watermarkPath = path.join(__dirname, '..', '..', 'media', 'water-marks', 'waterMark1.png');
+  
     console.log('Media Folder Path:', mediaFolderPath);
-
+  
     // Ensure the media folder exists
     await fsPromises.mkdir(mediaFolderPath, { recursive: true });
-
+  
     if (!imageFiles || !Array.isArray(imageFiles)) {
       throw new Error('No valid image files provided.');
     }
-
-
+  
     for (const imageFile of imageFiles) {
-
       if (!imageFile.buffer || !imageFile.originalname) {
         console.error('Invalid image file:', imageFile);
         continue; // Skip invalid image files
       }
-
+  
       const image = await Jimp.read(imageFile.buffer);
-
-      const watermark = await Jimp.read('media/water-marks/waterMark1.png'); // water mark path
-
-      // Calculate the size of the watermark to cover the entire image while maintaining the original aspect ratio
+  
+      // Crop the image to a specific size (e.g., 270x250)
+      const targetWidth = 810;
+      const targetHeight = 750;
+      image.cover(targetWidth, targetHeight);
+  
+      // Read the watermark image
+      const watermark = await Jimp.read(watermarkPath);
+  
+      // Calculate the size of the watermark to cover the entire cropped image while maintaining the original aspect ratio
       const watermarkWidth = image.getWidth();
       const watermarkHeight = (watermarkWidth / watermark.getWidth()) * watermark.getHeight();
-
+  
       // Resize watermark
       watermark.resize(watermarkWidth, watermarkHeight);
-
-      // Composite the watermark onto the image at the center
+  
+      // Composite the watermark onto the cropped image at the center
       const x = (image.getWidth() - watermark.getWidth()) / 2;
       const y = (image.getHeight() - watermark.getHeight()) / 2;
       image.composite(watermark, x, y);
-
+  
       const imageFileName = `${Date.now()}_${imageFile.originalname}`;
       const imagePath = path.join(mediaFolderPath, imageFileName);
-
-      // Save the image with watermark
+  
+      // Save the cropped image with watermark
       await image.writeAsync(imagePath);
       savedImages.push(imageFileName);
     }
-
+  
     return savedImages;
   }
+  
+  
 
   async findAllWithImages(): Promise<Article[]> {
     const articles = await this.articleModel
