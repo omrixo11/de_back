@@ -2,10 +2,13 @@ import { Injectable, UnauthorizedException, NotFoundException } from '@nestjs/co
 import { InjectModel } from '@nestjs/mongoose';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
+import { SearchArticlesDto } from './dto/search-article.dto';
 import { Article, ArticleSchema } from 'src/schemas/article.schema';
 import { Model } from 'mongoose';
 import { promises as fsPromises } from 'fs';
 import { User } from 'src/schemas/user.schema';
+import { Types } from 'mongoose'; // Import the Types namespace
+import { PropertyType } from 'src/schemas/article.schema';
 import * as path from 'path';
 import * as Jimp from 'jimp';
 
@@ -28,7 +31,7 @@ export class ArticleService {
 
     // Declare userArticlesCount outside of the conditional block
     let userArticlesCount = 0;
-  
+
     // Check if the user has a plan associated with them
     if (!user.plan) {
       // If the user does not have a plan, limit the number of posts to 2
@@ -46,20 +49,20 @@ export class ArticleService {
         throw new UnauthorizedException('User has reached the maximum number of posts allowed');
       }
     }
-  
+
     // Proceed with creating the article
     const createdArticle = new this.articleModel({
       ...createArticleDto,
       user: userId,
     });
-  
+
     createdArticle.images = await this.saveArticleImages(imageFiles);
     const savedArticle = await createdArticle.save();
-  
+
     // Update the user's articles array only if the article was successfully created
     user.articles.push(savedArticle._id);
     await user.save();
-  
+
     return savedArticle;
   }
 
@@ -377,5 +380,47 @@ export class ArticleService {
     }
     return user.favoriteArticles.length;
   }
-  
+
+  async findSimilarArticles(ville: Types.ObjectId, quartier: Types.ObjectId, propertyType: PropertyType[], currentArticleId?: string): Promise<Article[]> {
+    
+    const queryConditions: any = {
+      ville,
+      quartier,
+      propertyType: { $in: [propertyType] }, // Assuming propertyType is a single value and not an array in this context
+    };
+
+    // Exclude the current article from the results if an ID is provided
+    if (currentArticleId) {
+      queryConditions._id = { $ne: currentArticleId };
+    }
+
+
+    const similarArticles = await this.articleModel.find(queryConditions)
+      .populate('user')
+      .populate('region')
+      .populate('ville')
+      .populate('quartier')
+      .sort({ createdAt: -1 })
+      .exec();
+
+    // Process each article to ensure it has images
+    const articlesWithImages = await Promise.all(similarArticles.map(async (article) => {
+      if (!article.images || article.images.length === 0) {
+
+        article.images = await this.saveArticleImages([]);
+      }
+
+      const images = article.images.map((filename) => {
+        return `http://localhost:5001/media/articles-images/${filename}`;
+      });
+
+      return {
+        ...article.toJSON(),
+        images,
+      };
+    }));
+
+    return articlesWithImages;
+  }
+
 }

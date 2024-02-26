@@ -1,11 +1,12 @@
 // In article.controller.ts
 
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFiles, Request, UseGuards, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFiles, Request, UseGuards, Query, NotFoundException } from '@nestjs/common';
 import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from 'src/auth/user/user-auth.guard';
+import { SearchArticlesDto } from './dto/search-article.dto';
 
 @Controller('articles')
 export class ArticleController {
@@ -89,6 +90,15 @@ export class ArticleController {
   @UseGuards(AuthGuard)
   getUserFavoriteArticleCount(@Param('userId') userId: string) {
     return this.articleService.countFavoriteArticles(userId);
+  }
+
+  @Get(':id/similar')
+  async findSimilar(@Param('id') id: string) {
+    const article = await this.articleService.findOne(id);
+    if (!article) {
+      throw new NotFoundException('Article not found');
+    }
+    return this.articleService.findSimilarArticles(article.ville, article.quartier, article.propertyType, id);
   }
 
   @Patch(':id/increment-views')
