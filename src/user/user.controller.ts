@@ -46,4 +46,19 @@ export class UserController {
       throw error;
     }
   }
+
+  @Post(':id/toggle-favorite/:articleId')
+  async toggleFavorite(
+    @Param('id') userId: string,
+    @Param('articleId') articleId: string,
+  ) {
+    try {
+      const result = await this.userService.toggleFavorite(userId, articleId);
+      return { success: true, result };
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      throw error;
+    }
+  }
+
 }

@@ -13,6 +13,12 @@ export class RegionService {
     @InjectModel(Ville.name) private readonly villeModel: Model<Ville>,
   ) {}
 
+  async getRegionSuggestions(input: string): Promise<Region[]> {
+    // Implement logic to fetch regions based on the user's input
+    const regex = new RegExp(input, 'i'); // Case-insensitive regex pattern
+    return this.regionModel.find({ name: { $regex: regex } }).exec();
+  }
+
   async create(createRegionDto: CreateRegionDto): Promise<Region> {
     const createdRegion = new this.regionModel(createRegionDto);
     return createdRegion.save();

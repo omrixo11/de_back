@@ -18,6 +18,12 @@ export class VilleService {
     return createdVille.save();
   }
 
+  async getVilleSuggestions(input: string): Promise<Ville[]> {
+    // Implement logic to fetch regions based on the user's input
+    const regex = new RegExp(input, 'i'); // Case-insensitive regex pattern
+    return this.villeModel.find({ name: { $regex: regex } }).exec();
+  }
+
   async getQuartierByVille(villeId: string): Promise<Quartier[]> {
     const ville = await this.villeModel.findById(villeId).populate('quartiers').exec();
     if (!ville) {

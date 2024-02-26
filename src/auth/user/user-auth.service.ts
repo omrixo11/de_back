@@ -19,19 +19,20 @@ export class UserAuthService {
   ) { }
 
   async validateUser(email: string, password: string): Promise<any> {
+
     const user = await this.userService.findByEmail(email);
+
     if (user && (await bcrypt.compare(password, user.password))) {
       const { password, ...result } = user.toObject();
-
       const token = this.generateToken(result);
-
+      await user.populate('plan')
       return { token, ...result };
     }
     return null;
   }
 
   async register(createUserDto: CreateUserDto): Promise<any> {
-    
+
     const existingUser = await this.userService.findByEmail(createUserDto.email);
     if (existingUser) {
       return null;
@@ -39,6 +40,8 @@ export class UserAuthService {
 
     const confirmationCode = this.generateConfirmationCode();
     const newUser = await this.userService.create({ ...createUserDto, confirmationCode });
+
+
     const { password, ...result } = newUser.toObject();
 
     // Send confirmation email
@@ -46,12 +49,16 @@ export class UserAuthService {
 
     const token = this.generateToken(result);
 
+    // Populate the user's plan after creating the user
+    await newUser.populate('plan');
+
+
     return { token, ...result };
   }
 
   private generateConfirmationCode(): string {
     return Math.floor(100000 + Math.random() * 900000).toString();
-}
+  }
 
   async verifyEmailCode(userId: string, confirmationCode: string): Promise<User> {
     const user = await this.userService.findOne(userId);

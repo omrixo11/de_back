@@ -1,6 +1,6 @@
 // In article.controller.ts
 
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFiles, Request, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFiles, Request, UseGuards, Query } from '@nestjs/common';
 import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
@@ -29,6 +29,27 @@ export class ArticleController {
     return this.articleService.uploadImages(id, imageFiles);
   }
 
+  @Get('search')
+  search(@Query('q') searchQuery: string) {
+    return this.articleService.searchArticles(searchQuery);
+  }
+
+
+  @Get('by-ville/:ville')
+  getByVille(@Param('ville') ville: string) {
+    return this.articleService.getByVille(ville);
+  }
+
+  @Get('by-quartier/:quartier')
+  getByQuartier(@Param('quartier') quartier: string) {
+    return this.articleService.getByQuartier(quartier);
+  }
+
+  @Get('by-region/:region')
+  getByRegion(@Param('region') region: string) {
+    return this.articleService.getByRegion(region);
+  }
+
   @Get()
   findAll() {
     return this.articleService.findAllWithImages();
@@ -46,6 +67,35 @@ export class ArticleController {
     return this.articleService.findOne(id);
   }
 
+  @Get('user/:userId/article-count')
+  @UseGuards(AuthGuard)
+  getUserArticleCount(@Param('userId') userId: string) {
+    return this.articleService.countUserArticles(userId);
+  }
+
+  @Get(':id/views')
+  @UseGuards(AuthGuard)
+  getViewsCount(@Param('id') id: string) {
+    return this.articleService.getViewsCount(id);
+  }
+
+  @Get('user/:userId/total-views')
+  @UseGuards(AuthGuard)
+  getTotalViewsCountForUser(@Param('userId') userId: string) {
+    return this.articleService.getTotalViewsCountForUser(userId);
+  }
+
+  @Get('user/:userId/favorite-article-count')
+  @UseGuards(AuthGuard)
+  getUserFavoriteArticleCount(@Param('userId') userId: string) {
+    return this.articleService.countFavoriteArticles(userId);
+  }
+
+  @Patch(':id/increment-views')
+  incrementViewsCount(@Param('id') id: string) {
+    return this.articleService.incrementViewsCount(id);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateArticleDto: UpdateArticleDto) {
     return this.articleService.update(id, updateArticleDto);
@@ -55,7 +105,7 @@ export class ArticleController {
   remove(@Param('id') id: string) {
     return this.articleService.remove(id);
   }
-  
+
   @Delete(':id/user-article')
   @UseGuards(AuthGuard)
   removeUserArticle(@Param('id') id: string, @Request() req: any) {
@@ -63,5 +113,4 @@ export class ArticleController {
     return this.articleService.removeUserArticle(userId, id);
   }
 
-  
 }

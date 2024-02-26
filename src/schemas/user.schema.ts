@@ -20,10 +20,10 @@ export class User extends Document {
   @Prop({ required: true, validate: { validator: isPasswordValid, message: 'Password must be at least 8 characters long' } })
   password: string;
 
-  @Prop({ trim: true })
+  @Prop({ trim: true, required: true })
   firstName: string;
 
-  @Prop({ trim: true })
+  @Prop({ trim: true, required: true })
   lastName: string;
 
   @Prop({ required: true })
@@ -32,18 +32,28 @@ export class User extends Document {
   @Prop({ trim: true })
   adress: string;
 
+  @Prop({})
+  profileImg: string;
+
   @Prop({ default: false })
   isOnPlan: boolean;
 
   @Prop({ type: [{ type: Types.ObjectId, ref: 'Article' }] })
   articles: Types.ObjectId[];
 
+  @Prop({ default: 0 })
+  articleCount: number;
+
   /////auth conf
-  @Prop({ default: null })
+  @Prop({ default: 0 })
   confirmationCode: string;
 
   @Prop({ default: false })
   isEmailVerified: boolean;
+
+  //favoorites:
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Article' }], default: [] })
+  favoriteArticles: Types.ObjectId[];
 
   ///reset password
   @Prop()

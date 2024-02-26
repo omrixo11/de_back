@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { RegionService } from './region.service';
 import { CreateRegionDto } from './dto/create-region.dto';
 import { UpdateRegionDto } from './dto/update-region.dto';
@@ -20,6 +20,11 @@ export class RegionController {
   @Delete(':regionId/villes/:villeId')
   async deleteVilleFromRegion(@Param('regionId') regionId: string, @Param('villeId') villeId: string) {
     return this.regionService.deleteVilleFromRegion(regionId, villeId);
+  }
+
+  @Get('suggestions')
+  async getRegionSuggestions(@Query('input') input: string) {
+    return this.regionService.getRegionSuggestions(input);
   }
 
   @Get(':regionId/villes')

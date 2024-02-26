@@ -8,7 +8,6 @@ import { User } from './user.schema';
 
 
 export enum PropertyType {
-
     Appartement = 'Appartement',
     Bureau = 'Bureau',
     Chateau = 'Château',
@@ -20,7 +19,6 @@ export enum PropertyType {
     Terrain = 'Terrain',
     Studio = 'Studio',
     Villa = 'Villa',
-
 }
 
 export enum EtatPropriete {
@@ -29,6 +27,7 @@ export enum EtatPropriete {
     BonEtat = 'BonEtat',
     ARenover = 'ARenover',
     EnConstruction = 'EnConstruction',
+    SurPlan = 'SurPlan'
 
 }
 
@@ -49,6 +48,21 @@ export enum TransactionType {
 
 }
 
+export enum SponsoringLevel {
+
+    None = 'None',
+    Level1 = 'Level1',
+    Level2 = 'Level2',
+    Level3 = 'Level3',
+    Super = 'Super',
+}
+
+export enum BoostType {
+
+    Carousel = 'Carousel',
+    Classic = 'Classique',
+}
+
 @Schema({ timestamps: true })
 export class Article extends Document {
 
@@ -64,12 +78,12 @@ export class Article extends Document {
 
     @Prop({ required: true, type: String, enum: Object.values(EtatPropriete) })
     etatPropriete: EtatPropriete;
-  
+
     @Prop({ required: true, type: String, enum: Object.values(TransactionType) })
     transactionType: TransactionType;
 
     ////adress
-    @Prop({ })
+    @Prop({})
     adressExact: string;
 
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Region' })
@@ -110,6 +124,14 @@ export class Article extends Document {
 
     @Prop({})
     costumId: string;
+
+    //favoritedby
+    @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }], default: [] })
+    favoritedBy: Types.ObjectId[];
+
+    //views
+    @Prop({ default: 0 })
+    viewsCount: number;
 
     //Extra Options:::::
     @Prop({ default: false })
@@ -184,6 +206,14 @@ export class Article extends Document {
 
     @Prop({ default: false })
     isAccepted: boolean;
+
+    //for me
+    @Prop({ default: false })
+    isSuper: Boolean;
+
+    //Sponsoring
+    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Boost', default: null })
+    boost: Types.ObjectId | null;
 
 }
 

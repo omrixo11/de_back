@@ -11,6 +11,9 @@ import { PlanModule } from './plan/plan.module';
 import { VilleModule } from './ville/ville.module';
 import { RegionModule } from './region/region.module';
 import { QuartierModule } from './quartier/quartier.module';
+import { PaymentModule } from './payment/payment.module';
+import { ContactModule } from './contact/contact.module';
+import { BoostModule } from './boost/boost.module';
 
 @Module({
   imports: [
@@ -27,7 +30,9 @@ import { QuartierModule } from './quartier/quartier.module';
     VilleModule,
     RegionModule,
     QuartierModule,
-
+    PaymentModule,
+    ContactModule,
+    BoostModule,
   ],
   controllers: [AppController],
   providers: [AppService],

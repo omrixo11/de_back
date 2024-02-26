@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { QuartierService } from './quartier.service';
 import { CreateQuartierDto } from './dto/create-quartier.dto';
 import { UpdateQuartierDto } from './dto/update-quartier.dto';
@@ -10,6 +10,11 @@ export class QuartierController {
   @Post()
   create(@Body() createQuartierDto: CreateQuartierDto) {
     return this.quartierService.create(createQuartierDto);
+  }
+
+  @Get('suggestions')
+  async getQuartierSuggestions(@Query('input') input: string) {
+    return this.quartierService.getQuartierSuggestions(input);
   }
 
   @Get()

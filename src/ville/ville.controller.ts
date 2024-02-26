@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { VilleService } from './ville.service';
 import { CreateVilleDto } from './dto/create-ville.dto';
 import { UpdateVilleDto } from './dto/update-ville.dto';
@@ -20,6 +20,11 @@ export class VilleController {
   @Delete(':villeId/quartiers/:quartierId')
   async deleteQuartierFromVille(@Param('villeId') villeId: string, @Param('quartierId') quartierId: string) {
     return this.villeService.deleteQuartierFromVille(villeId, quartierId);
+  }
+
+  @Get('suggestions')
+  async getVilleSuggestions(@Query('input') input: string) {
+    return this.villeService.getVilleSuggestions(input);
   }
 
   @Get(':villeId/quartiers')
