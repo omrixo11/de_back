@@ -5,7 +5,7 @@ import { authMiddleware } from './auth/user/user-auth.middleware'; // Adjust the
 import * as express from 'express';
 import * as path from 'path';
 
-const port= 5001;
+const port= process.env.PORT;
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

@@ -14,10 +14,12 @@ import { QuartierModule } from './quartier/quartier.module';
 import { PaymentModule } from './payment/payment.module';
 import { ContactModule } from './contact/contact.module';
 import { BoostModule } from './boost/boost.module';
+import { config } from 'dotenv';
+config();
 
 @Module({
   imports: [
-    MongooseModule.forRoot("mongodb://localhost:27017/real"),
+    MongooseModule.forRoot(process.env.DATABASE_URL),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret: '1234567890@qwertyuiop',
@@ -26,7 +28,7 @@ import { BoostModule } from './boost/boost.module';
     UserAuthModule,
     UserModule,
     ArticleModule,
-    PlanModule,   
+    PlanModule,
     VilleModule,
     RegionModule,
     QuartierModule,
@@ -37,4 +39,4 @@ import { BoostModule } from './boost/boost.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
