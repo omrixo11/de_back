@@ -1,5 +1,5 @@
 # Step 1: Use an official Node.js runtime as a parent image
-FROM node:18
+FROM node:latest
 
 # Set the working directory in the container
 WORKDIR /usr/src/app
@@ -8,7 +8,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Install project dependencies
-RUN npm install
+RUN npm cache clean --force && npm install
 
 # Bundle app source inside Docker image
 COPY . .
@@ -17,7 +17,7 @@ COPY . .
 RUN npm run build
 
 # Your application runs on port 3000. Use the EXPOSE instruction to have it mapped by the docker daemon
-EXPOSE 3000
+EXPOSE 5001
 
 # Define the command to run the app
 CMD ["npm", "run", "start:prod"]

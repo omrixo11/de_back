@@ -9,17 +9,18 @@ import { ArticleModule } from './article/article.module'
 import { UserModule } from './user/user.module';
 import { PlanModule } from './plan/plan.module';
 import { VilleModule } from './ville/ville.module';
-import { RegionModule } from './region/region.module';
 import { QuartierModule } from './quartier/quartier.module';
 import { PaymentModule } from './payment/payment.module';
 import { ContactModule } from './contact/contact.module';
 import { BoostModule } from './boost/boost.module';
-import { config } from 'dotenv';
-config();
+
 
 @Module({
   imports: [
-    MongooseModule.forRoot(process.env.DATABASE_URL),
+    MongooseModule.forRoot(
+      // "mongodb+srv://omrixo:omri@cluster0.6ry9vgc.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+      "mongodb://localhost:27017/real"
+      ),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret: '1234567890@qwertyuiop',
@@ -30,7 +31,6 @@ config();
     ArticleModule,
     PlanModule,
     VilleModule,
-    RegionModule,
     QuartierModule,
     PaymentModule,
     ContactModule,

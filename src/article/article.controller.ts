@@ -5,7 +5,7 @@ import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { AuthGuard } from 'src/auth/user/user-auth.guard';
+import { JwtAuthGuard } from 'src/auth/user/user-auth.middleware';
 import { SearchArticlesDto } from './dto/search-article.dto';
 
 @Controller('articles')
@@ -13,7 +13,7 @@ export class ArticleController {
   constructor(private readonly articleService: ArticleService) { }
 
   @Post()
-  @UseGuards(AuthGuard)
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FilesInterceptor('images', 10))
   create(
     @Body() createArticleDto: CreateArticleDto,
@@ -46,18 +46,13 @@ export class ArticleController {
     return this.articleService.getByQuartier(quartier);
   }
 
-  @Get('by-region/:region')
-  getByRegion(@Param('region') region: string) {
-    return this.articleService.getByRegion(region);
-  }
-
   @Get()
   findAll() {
     return this.articleService.findAllWithImages();
   }
 
   @Get('user-articles')
-  @UseGuards(AuthGuard)
+  @UseGuards(JwtAuthGuard)
   findUserArticles(@Request() req: any) {
     const userId = req.user._id;
     return this.articleService.findUserArticles(userId);
@@ -69,25 +64,25 @@ export class ArticleController {
   }
 
   @Get('user/:userId/article-count')
-  @UseGuards(AuthGuard)
+  @UseGuards(JwtAuthGuard)
   getUserArticleCount(@Param('userId') userId: string) {
     return this.articleService.countUserArticles(userId);
   }
 
   @Get(':id/views')
-  @UseGuards(AuthGuard)
+  @UseGuards(JwtAuthGuard)
   getViewsCount(@Param('id') id: string) {
     return this.articleService.getViewsCount(id);
   }
 
   @Get('user/:userId/total-views')
-  @UseGuards(AuthGuard)
+  @UseGuards(JwtAuthGuard)
   getTotalViewsCountForUser(@Param('userId') userId: string) {
     return this.articleService.getTotalViewsCountForUser(userId);
   }
 
   @Get('user/:userId/favorite-article-count')
-  @UseGuards(AuthGuard)
+  @UseGuards(JwtAuthGuard)
   getUserFavoriteArticleCount(@Param('userId') userId: string) {
     return this.articleService.countFavoriteArticles(userId);
   }
@@ -100,6 +95,20 @@ export class ArticleController {
     }
     return this.articleService.findSimilarArticles(article.ville, article.quartier, article.propertyType, id);
   }
+
+  @Get('user/:userId/views-by-ville')
+  @UseGuards(JwtAuthGuard)
+  getTotalViewsByVilleForUser(@Param('userId') userId: string) {
+    return this.articleService.getTotalViewsByVilleForUser(userId);
+  }
+
+  @Get('user/:userId/views-by-quartier')
+  @UseGuards(JwtAuthGuard)
+  getTotalViewsByQuartierForUser(@Param('userId') userId: string) {
+    return this.articleService.getTotalViewsByQuartierForUser(userId);
+  }
+
+
 
   @Patch(':id/increment-views')
   incrementViewsCount(@Param('id') id: string) {
@@ -117,7 +126,7 @@ export class ArticleController {
   }
 
   @Delete(':id/user-article')
-  @UseGuards(AuthGuard)
+  @UseGuards(JwtAuthGuard)
   removeUserArticle(@Param('id') id: string, @Request() req: any) {
     const userId = req.user._id;
     return this.articleService.removeUserArticle(userId, id);

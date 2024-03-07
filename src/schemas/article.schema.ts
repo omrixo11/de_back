@@ -86,9 +86,6 @@ export class Article extends Document {
     @Prop({})
     adressExact: string;
 
-    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Region' })
-    region: Types.ObjectId;
-
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Ville' })
     ville: Types.ObjectId;
 

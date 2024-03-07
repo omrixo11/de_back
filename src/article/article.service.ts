@@ -14,7 +14,8 @@ import * as Jimp from 'jimp';
 
 @Injectable()
 export class ArticleService {
-  constructor(@InjectModel(Article.name) private articleModel: Model<Article>,
+  constructor(
+    @InjectModel(Article.name) private articleModel: Model<Article>,
     @InjectModel(User.name) private userModel: Model<User>,
   ) { }
 
@@ -134,7 +135,6 @@ export class ArticleService {
     const articles = await this.articleModel
       .find()
       .populate('user')
-      .populate('region')
       .populate('ville')
       .populate('quartier')
       .populate('boost')
@@ -149,7 +149,7 @@ export class ArticleService {
 
     const articlesWithImages = articles.map((article) => {
       const images = article.images.map((filename) => {
-        return `http://localhost:5001/media/articles-images/${filename}`;
+        return `https://dessa.ovh/media/articles-images/${filename}`;
       });
 
       return {
@@ -166,7 +166,6 @@ export class ArticleService {
     const articles = await this.articleModel
       .find({ user: userId })
       .populate('user')
-      .populate('region')
       .populate('ville')
       .populate('quartier')
       .populate('boost')
@@ -180,7 +179,7 @@ export class ArticleService {
 
     const articlesWithImages = articles.map((article) => {
       const images = article.images.map((filename) => {
-        return `http://localhost:5001/media/articles-images/${filename}`;
+        return `https://dessa.ovh/media/articles-images/${filename}`;
       });
 
       return {
@@ -199,7 +198,6 @@ export class ArticleService {
   async findOne(id: string): Promise<Article> {
     const article = await this.articleModel.findById(id)
       .populate('user')
-      .populate('region')
       .populate('ville')
       .populate('quartier')
       .populate('boost')
@@ -214,7 +212,7 @@ export class ArticleService {
     }
 
     const images = article.images.map((filename) => {
-      return `http://localhost:5001/media/articles-images/${filename}`;
+      return `https://dessa.ovh/media/articles-images/${filename}`;
     });
 
     const articleWithImages = {
@@ -290,7 +288,6 @@ export class ArticleService {
         ]
       })
         .populate('user')
-        .populate('region')
         .populate('ville')
         .populate('quartier')
         .sort({ createdAt: -1 })
@@ -309,7 +306,6 @@ export class ArticleService {
     return this.articleModel
       .find({ ville })
       .populate('user')
-      .populate('region')
       .populate('quartier')
       .sort({ createdAt: -1 })
       .exec();
@@ -319,18 +315,7 @@ export class ArticleService {
     return this.articleModel
       .find({ quartier })
       .populate('user')
-      .populate('region')
       .populate('ville')
-      .sort({ createdAt: -1 })
-      .exec();
-  }
-
-  async getByRegion(region: string): Promise<Article[]> {
-    return this.articleModel
-      .find({ region })
-      .populate('user')
-      .populate('ville')
-      .populate('quartier')
       .sort({ createdAt: -1 })
       .exec();
   }
@@ -382,7 +367,7 @@ export class ArticleService {
   }
 
   async findSimilarArticles(ville: Types.ObjectId, quartier: Types.ObjectId, propertyType: PropertyType[], currentArticleId?: string): Promise<Article[]> {
-    
+
     const queryConditions: any = {
       ville,
       quartier,
@@ -397,7 +382,6 @@ export class ArticleService {
 
     const similarArticles = await this.articleModel.find(queryConditions)
       .populate('user')
-      .populate('region')
       .populate('ville')
       .populate('quartier')
       .sort({ createdAt: -1 })
@@ -411,7 +395,7 @@ export class ArticleService {
       }
 
       const images = article.images.map((filename) => {
-        return `http://localhost:5001/media/articles-images/${filename}`;
+        return `https://dessa.ovh/media/articles-images/${filename}`;
       });
 
       return {
@@ -422,5 +406,64 @@ export class ArticleService {
 
     return articlesWithImages;
   }
+
+  async getTotalViewsByVilleForUser(userId: string): Promise<any[]> {
+    const aggregationPipeline = [
+      { $match: { user: userId } },
+      { $group: { _id: '$ville', totalViews: { $sum: '$viewsCount' } } },
+      {
+        $lookup: {
+          from: 'villes', // Assuming your ville collection is named 'villes'
+          localField: '_id',
+          foreignField: '_id',
+          as: 'villeDetails'
+        }
+      },
+      {
+        $unwind: '$villeDetails' // Deconstructs the 'villeDetails' array
+      },
+      {
+        $project: {
+          _id: 0, // Exclude the ville ID from the final projection
+          villeName: '$villeDetails.name', // Include the ville name
+          totalViews: 1 // Include the total views
+        }
+      }
+    ];
+
+    const result = await this.articleModel.aggregate(aggregationPipeline).exec();
+    return result;
+}
+
+async getTotalViewsByQuartierForUser(userId: string): Promise<any[]> {
+  const aggregationPipeline = [
+    { $match: { user: userId } },
+    { $group: { _id: '$quartier', totalViews: { $sum: '$viewsCount' } } },
+    {
+      $lookup: {
+        from: 'quartiers', // Assuming your quartier collection is named 'quartiers'
+        localField: '_id',
+        foreignField: '_id',
+        as: 'quartierDetails'
+      }
+    },
+    { $unwind: '$quartierDetails' },
+    {
+      $project: {
+        _id: 0, // Exclude the quartier ID from the final projection
+        quartierName: '$quartierDetails.name', // Include the quartier name
+        totalViews: 1 // Include the total views
+      }
+    }
+  ];
+
+  const result = await this.articleModel.aggregate(aggregationPipeline).exec();
+  return result.map(item => ({
+    quartierName: item.quartierName,
+    totalViews: item.totalViews
+  }));
+}
+
+
 
 }

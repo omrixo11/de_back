@@ -150,7 +150,7 @@ export class UserAuthController {
       const user = await this.userAuthService.findUserByEmail(email);
 
       return {
-        exists: !!user, // Convert to boolean
+        exists: !!user,
       };
     } catch (error) {
       return {

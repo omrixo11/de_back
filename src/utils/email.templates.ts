@@ -115,7 +115,7 @@ export const confirmationEmailTemplate = (confirmationCode: string): string => {
       <div class="container">
         <h1>Réinitialisation de mot de passe</h1>
         <p>Cliquez sur le bouton ci-dessous pour réinitialiser votre mot de passe :</p>
-        <a href="http://localhost:5173/reset-password/${resetToken}" class="verification-code">Réinitialiser</a>
+        <a href="https://dessa.tn/reset-password/${resetToken}" class="verification-code">Réinitialiser</a>
         <div class="footer">
           <p>Ceci est un message automatisé. Veuillez ne pas répondre.</p>
           <p>www.dessa.tn</p>

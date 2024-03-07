@@ -1,23 +1,21 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Logger } from '@nestjs/common';
-import { authMiddleware } from './auth/user/user-auth.middleware'; // Adjust the path
-import * as express from 'express';
-import * as path from 'path';
 
-const port= process.env.PORT;
+const port = 5001; // or any port you wish to use
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.enableCors();
-
-  app.use('/media', express.static(path.join(__dirname, '..', 'media')));
-
-  app.use(authMiddleware()); // Use the factory function to get the middleware
-
-
+  
+  app.enableCors(); // Enable CORS if needed
+  
   await app.listen(port, () => {
-    Logger.log(`is running on http://localhost:${port}`);
+    Logger.log(`Application is running on: ${port}`);
   });
+
+//   app.listen(port, () => {
+//     Logger.log(`Application is running on: ${port}`);
+// });
+
 }
 bootstrap();

@@ -1,27 +1,36 @@
-// user-auth.middleware.ts
-import { Injectable, NestMiddleware } from '@nestjs/common';
-import { Request, Response, NextFunction } from 'express';
+import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { Reflector } from '@nestjs/core';
 import * as jwt from 'jsonwebtoken';
+import { UserService } from 'src/user/user.service';
 
-@Injectable()
-export class AuthMiddleware implements NestMiddleware {
-  use(req: Request, res: Response, next: NextFunction) {
-    const token = req.headers.authorization?.split(' ')[1];
-
-    if (token) {
-      try {
-        const decoded = jwt.verify(token, '1234567890qwertyuiop') as any;
-        req.user = decoded;
-      } catch (error) {
-        // Token is invalid
-        console.error('Invalid token:', error.message);
-      }
-    }
-
-    next();
-  }
+interface JwtPayloadWithUserId extends jwt.JwtPayload {
+  _id: string; 
 }
 
-export function authMiddleware() {
-  return new AuthMiddleware().use;
+@Injectable()
+export class JwtAuthGuard extends AuthGuard('jwt') {
+    constructor(private reflector: Reflector, private userService: UserService) {
+        super();
+    }
+
+    async canActivate(context: ExecutionContext): Promise<boolean> {
+        const request = context.switchToHttp().getRequest();
+        const token = request.headers.authorization?.split(' ')[1];
+
+        if (!token) {
+            throw new UnauthorizedException('No token provided');
+        }
+
+        try {
+            const decoded = jwt.verify(token, '1234567890qwertyuiop') as JwtPayloadWithUserId;
+            request.user = await this.userService.findOne(decoded._id);
+            if (!request.user) {
+                throw new UnauthorizedException('User not found');
+            }
+            return true;
+        } catch (error) {
+            throw new UnauthorizedException('Invalid token');
+        }
+    }
 }

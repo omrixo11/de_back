@@ -6,19 +6,19 @@ export class NodeMailerService {
 
   constructor() {
     this.transporter = nodemailer.createTransport({
-      host: 'smtp.office365.com',
-      port: 587,
-      secure: false,
+      host: 'ssl0.ovh.net', // Common OVH SMTP server, verify this with OVH documentation or support
+      port: 587, // Standard port for SMTP, check if OVH recommends a different one
+      secure: false, // Typically false for port 587, but verify with OVH
       auth: {
-        user: 'tunis.market@outlook.com',
-        pass: 'daliTunisMarket1',
+        user: 'noreply@dessa.tn',
+        pass: 'OTSdaliSupport1997',
       },
     });
   }
 
   async sendEmail(to: string, subject: string, html: string): Promise<void> {
     const mailOptions = {
-      from: 'tunis.market@outlook.com',
+      from: 'noreply@dessa.tn',
       to,
       subject,
       html,
