@@ -1,11 +1,62 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards, Param, Patch, NotFoundException } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards, BadRequestException, Param, Patch, NotFoundException } from '@nestjs/common';
 import { UserAuthService } from './user-auth.service';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
+import { UpdateUserDto } from 'src/user/dto/update-user.dto';
+import { JwtAuthGuard } from './user-auth.middleware';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { UseInterceptors, UploadedFile } from '@nestjs/common';
 
 @Controller('user-auth')
 
 export class UserAuthController {
   constructor(private userAuthService: UserAuthService) { }
+
+  @Patch('change-password/:userId')
+  @UseGuards(JwtAuthGuard)
+  async changePassword(
+    @Param('userId') userId: string,
+    @Body() body: { oldPassword: string; newPassword: string }
+  ) {
+    const { oldPassword, newPassword } = body;
+
+    try {
+      await this.userAuthService.changePassword(userId, oldPassword, newPassword);
+      return {
+        message: 'Password changed successfully',
+      };
+    } catch (error) {
+      if (error.status === HttpStatus.FORBIDDEN) {
+        throw new BadRequestException(error.response);
+      } else {
+        throw new NotFoundException(error.response);
+      }
+    }
+  }
+
+  @Patch('update-user/:userId')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('profileImage'))
+  async updateUser(
+    @Param('userId') userId: string,
+    @Body() body: { updateData: UpdateUserDto; currentPassword: string },
+    @UploadedFile() profileImage?: Express.Multer.File,
+  ) {
+    const { updateData, currentPassword } = body;
+
+    try {
+      const updatedUser = await this.userAuthService.updateUser(userId, updateData, currentPassword, profileImage);
+      return {
+        message: 'User updated successfully',
+        updatedUser,
+      };
+    } catch (error) {
+      if (error.status === HttpStatus.FORBIDDEN) {
+        throw new BadRequestException(error.response);
+      } else {
+        throw new NotFoundException(error.response);
+      }
+    }
+  }
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -84,8 +135,6 @@ export class UserAuthController {
 
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
-  // ... (existing code)
-
   async forgotPassword(@Body() body: { email: string }) {
     const { email } = body;
 

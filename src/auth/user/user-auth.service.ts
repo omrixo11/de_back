@@ -1,4 +1,4 @@
-import { Injectable, HttpException, HttpStatus, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, HttpException, HttpStatus } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
@@ -8,7 +8,8 @@ import { User } from 'src/schemas/user.schema';
 import { sendSms } from 'src/utils/twillio.sms';
 import { randomBytes } from 'crypto';
 import { confirmationEmailTemplate, passwordResetEmailTemplate } from 'src/utils/email.templates';
-
+import { promises as fsPromises } from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class UserAuthService {
@@ -19,15 +20,33 @@ export class UserAuthService {
   ) { }
 
   async validateUser(email: string, password: string): Promise<any> {
-
     const user = await this.userService.findByEmail(email);
 
     if (user && (await bcrypt.compare(password, user.password))) {
-      const { password, ...result } = user.toObject();
+      let userObject = user.toObject();
+
+      const { password, ...result } = userObject;
+
+      const profileImageUrl = userObject.profileImg
+        ? `http://localhost:5001/media/user-profile-images/${userObject.profileImg}`
+        // ? `https://dessa.ovh/media/user-profile-images/${userObject.profileImg}`
+        : null;
+
+      console.log("profileImageUrl:", profileImageUrl)
+
       const token = this.generateToken(result);
-      await user.populate('plan')
-      return { token, ...result };
+
+  
+      await user.populate('plan');
+      const finalResult = {
+        ...result,
+        profileImg: profileImageUrl, 
+        token, 
+      };
+      const jsonResponse = JSON.stringify(finalResult);
+      return finalResult;
     }
+
     return null;
   }
 
@@ -112,18 +131,6 @@ export class UserAuthService {
     return jwt.sign(payload, secret, { expiresIn });
   }
 
-  // async sendVerificationCodeSms(phoneNumber: string, verificationCode: string): Promise<void> {
-  //   const smsBody = `Your verification code is: ${verificationCode}`;
-
-  //   try {
-  //     await sendSms({ to: phoneNumber, body: smsBody });
-  //   } catch (error) {
-  //     // Handle error sending SMS
-  //     console.error('Error sending verification code via SMS:', error);
-  //     throw new Error('Error sending verification code');
-  //   }
-  // }
-
   // Reset password logic
   generateResetToken(): string {
     return randomBytes(32).toString('hex');
@@ -168,4 +175,120 @@ export class UserAuthService {
     return user;
   }
 
+  async updateUser(userId: string, updateData: any, currentPassword: string, imageFile?: Express.Multer.File): Promise<User> {
+    const user = await this.userService.findOne(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Verify the current password
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isPasswordValid) {
+      throw new HttpException('Incorrect password. Please try again.', HttpStatus.FORBIDDEN);
+    }
+
+    // If an image file is provided, handle the profile image update
+    if (imageFile) {
+      if (user.profileImg) {
+        // Delete the existing profile image if it exists
+        await this.deleteProfileImage(user.profileImg);
+      }
+
+      // Save the new profile image and update the user's profile image reference
+      const profileImageName = await this.saveProfileImage(imageFile);
+      user.profileImg = profileImageName;
+    }
+
+    // Check if the email has been changed and if it exists for another user
+    if (updateData.email && updateData.email !== user.email) {
+      const existingUserWithEmail = await this.userService.findByEmail(updateData.email);
+      if (existingUserWithEmail) {
+        throw new HttpException('Email already exists. Please choose a different email.', HttpStatus.BAD_REQUEST);
+      }
+      // If the email has changed, set isEmailVerified to false
+      user.isEmailVerified = false;
+    }
+
+    // Check if the email has been changed
+    if (updateData.email && updateData.email !== user.email) {
+      // If the email has changed, set isEmailVerified to false
+      user.isEmailVerified = false;
+    }
+
+    // Construct the full URL for the profile image
+    const profileImageUrl = user.profileImg
+      ? `http://localhost:5001/media/user-profile-images/${user.profileImg}`
+      // ? `https://dessa.ovh/media/user-profile-images/${user.profileImg}`
+      : null;
+
+    // Update other user information
+    Object.keys(updateData).forEach(key => {
+      if (key !== 'password') { // Ensure the password isn't inadvertently updated
+        user[key] = updateData[key];
+      }
+    });
+
+    await user.save();
+
+    // Exclude the password and other sensitive information before returning
+    const { password, ...result } = user.toObject();
+    const finalResult = {
+      ...result,
+      profileImg: profileImageUrl, // Include the full URL for the profile image
+    };
+
+    return finalResult;
+  }
+
+  private async deleteProfileImage(imageFileName: string): Promise<void> {
+    const mediaFolderPath = path.resolve(__dirname, '..', '..', '..', 'media', 'user-profile-images');
+    const imagePath = path.join(mediaFolderPath, imageFileName)
+
+    try {
+      await fsPromises.unlink(imagePath);
+    } catch (error) {
+      // If the file doesn't exist, log the error and move on
+      if (error.code !== 'ENOENT') {
+        console.error('Error deleting profile image:', error);
+        // Optionally, rethrow the error or handle it as per your application's requirements
+      }
+    }
+  }
+
+  private async saveProfileImage(imageFile: Express.Multer.File): Promise<string> {
+    const mediaFolderPath = path.resolve(__dirname, '..', '..', '..', 'media', 'user-profile-images');
+    await fsPromises.mkdir(mediaFolderPath, { recursive: true });
+    if (!imageFile.buffer || !imageFile.originalname) {
+      throw new Error('Invalid image file');
+    }
+    // Create the media folder if it doesn't exist
+    await fsPromises.mkdir(mediaFolderPath, { recursive: true });
+
+    const imageFileName = `${Date.now()}_${imageFile.originalname}`;
+    const imagePath = path.join(mediaFolderPath, imageFileName);
+    await fsPromises.writeFile(imagePath, imageFile.buffer);
+
+    console.log('Media Folder Path:', mediaFolderPath);
+
+    return imageFileName;
+  }
+
+  async changePassword(userId: string, oldPassword: string, newPassword: string): Promise<void> {
+    const user = await this.userService.findOne(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Verify the old password
+    const isPasswordValid = await bcrypt.compare(oldPassword, user.password);
+    if (!isPasswordValid) {
+      throw new HttpException('Incorrect old password. Please try again.', HttpStatus.FORBIDDEN);
+    }
+
+    // Update the user's password in the database
+    user.password = newPassword;
+    await user.save();
+  }
 }

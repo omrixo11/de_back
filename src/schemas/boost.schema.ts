@@ -5,8 +5,9 @@ import * as mongoose from 'mongoose';
 
 @Schema({ timestamps: true })
 export class Boost extends Document {
+
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Article', required: true })
-  contentId: mongoose.Types.ObjectId;
+  articleId: mongoose.Types.ObjectId;
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true })
   userId: mongoose.Types.ObjectId;
@@ -17,14 +18,15 @@ export class Boost extends Document {
   @Prop({ required: true })
   price: number;
 
-  @Prop({ enum: ['carousel', 'classic', 'super'], default: 'pending' })
+  @Prop({ enum: ['carousel', 'classic', 'super'] })
   type: string;
 
   @Prop({ enum: ['pending', 'active', 'expired'], default: 'pending' })
   status: string;
 
-  @Prop({ enum: ['unpaid', 'pending', 'paid'], default: 'unpaid' })
+  @Prop({ enum: ['unpaid', 'pending', 'paid'], default: 'pending' })
   paymentStatus: string;
+
 
 }
 

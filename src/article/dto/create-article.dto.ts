@@ -1,11 +1,11 @@
-import { PropertyType, NaturePropriete, EtatPropriete, TransactionType } from "src/schemas/article.schema";
+import { PropertyType, EtatPropriete, TransactionType } from "src/schemas/article.schema";
 
 export class CreateArticleDto {
 
     user: string;
 
     propertyType: PropertyType[];
-    naturePropriete: NaturePropriete[];
+
     
     etatPropriete: EtatPropriete;
     transactionType: TransactionType;
@@ -26,28 +26,28 @@ export class CreateArticleDto {
     images: string[];
     costumId: string;
 
-    isClimatisation: boolean;
-    isChauffageCentral: boolean;
-    isPlaceParcking: boolean;
-    isGarage: boolean;
-    isAscenceur: boolean;
-    isCameraSurveillance: boolean;
-    isCuisineEquiper: boolean;
-    isFour: boolean;
-    isHotte: boolean;
-    isConcierge: boolean;
-    isTerrasse: boolean;
-    isPiscine: boolean;
-    isJardin: boolean;
-    isPorteBlinder: boolean;
-    isVueSurMer: boolean;
-    isMachineLaver: boolean;
-    isCheminer: boolean;
-    isRefrigerateur: boolean;
-    isMicroOndes: boolean;
-    isInternet: boolean;
-    isChambreRangement: boolean;
-    isAnimauxDomestiquesAutorises: boolean;
+    // isClimatisation: boolean;
+    // isChauffageCentral: boolean;
+    // isPlaceParcking: boolean;
+    // isGarage: boolean;
+    // isAscenceur: boolean;
+    // isCameraSurveillance: boolean;
+    // isCuisineEquiper: boolean;
+    // isFour: boolean;
+    // isHotte: boolean;
+    // isConcierge: boolean;
+    // isTerrasse: boolean;
+    // isPiscine: boolean;
+    // isJardin: boolean;
+    // isPorteBlinder: boolean;
+    // isVueSurMer: boolean;
+    // isMachineLaver: boolean;
+    // isCheminer: boolean;
+    // isRefrigerateur: boolean;
+    // isMicroOndes: boolean;
+    // isInternet: boolean;
+    // isChambreRangement: boolean;
+    // isAnimauxDomestiquesAutorises: boolean;
 
     isAvailable: boolean;
     isAccepted: boolean;

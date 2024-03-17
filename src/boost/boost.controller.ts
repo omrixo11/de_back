@@ -7,13 +7,4 @@ import { UpdateBoostDto } from './dto/update-boost.dto';
 export class BoostController {
   constructor(private readonly boostService: BoostService) { }
 
-  @Post('article/:articleId')
-  async boostArticle(
-    @Param('articleId') articleId: string,
-    @Body() createBoostDto: CreateBoostDto
-  ) {
-    createBoostDto.contentId = articleId;
-    return this.boostService.createBoost(createBoostDto);
-  }
-
 }

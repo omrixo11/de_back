@@ -14,25 +14,31 @@ export enum BillingCycle {
 @Schema({ timestamps: true })
 export class User extends Document {
 
-  @Prop({ required: true })
+  @Prop({ unique: true })
   email: string;
 
-  @Prop({ required: true, validate: { validator: isPasswordValid, message: 'Password must be at least 8 characters long' } })
+  @Prop({ validate: { validator: isPasswordValid, message: 'Password must be at least 8 characters long' } })
   password: string;
 
-  @Prop({ trim: true, required: true })
+  @Prop({ trim: true })
   firstName: string;
 
-  @Prop({ trim: true, required: true })
+  @Prop({ trim: true })
   lastName: string;
 
-  @Prop({ required: true })
+  @Prop({})
   phoneNumber: string;
 
   @Prop({ trim: true })
-  adress: string;
+  address: string;
 
-  @Prop({})
+  @Prop({ trim: true })
+  companyName: string;
+
+  @Prop({ trim: true })
+  aboutMe: string;
+
+  @Prop({ default: null })
   profileImg: string;
 
   @Prop({ default: false })
@@ -43,6 +49,19 @@ export class User extends Document {
 
   @Prop({ default: 0 })
   articleCount: number;
+
+  //social media
+  @Prop({ default: null })
+  instagramUrl: string;
+
+  @Prop({ default: null })
+  facebookUrl: string;
+
+  @Prop({ default: null })
+  twitterUrl: string;
+
+  @Prop({ default: null })
+  websiteUrl: string;
 
   /////auth conf
   @Prop({ default: 0 })
@@ -65,6 +84,22 @@ export class User extends Document {
   //Plan
   @Prop({ type: Types.ObjectId, ref: 'Plan', default: null })
   plan: Plan;
+
+  @Prop({ default: 0 })
+  maxPosts: number;
+
+  @Prop({})
+  subscriptionStartDate: Date;
+
+  @Prop()
+  subscriptionEndDate: Date;
+
+  @Prop({ enum: ['pending', 'active', 'expired'], default: 'pending' })
+  planStatus: string;
+
+  //payment
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Payment', default: null }] })
+  paymentHistory: Types.ObjectId[];
 
   @Prop({ enum: BillingCycle, default: BillingCycle.Monthly })
   billingCycle: BillingCycle;

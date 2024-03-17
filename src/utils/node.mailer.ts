@@ -6,16 +6,15 @@ export class NodeMailerService {
 
   constructor() {
     this.transporter = nodemailer.createTransport({
-      host: 'ssl0.ovh.net', // Common OVH SMTP server, verify this with OVH documentation or support
-      port: 587, // Standard port for SMTP, check if OVH recommends a different one
-      secure: false, // Typically false for port 587, but verify with OVH
+      host: 'ssl0.ovh.net',
+      port: 587, 
+      secure: false, 
       auth: {
         user: 'noreply@dessa.tn',
         pass: 'OTSdaliSupport1997',
       },
     });
   }
-
   async sendEmail(to: string, subject: string, html: string): Promise<void> {
     const mailOptions = {
       from: 'noreply@dessa.tn',

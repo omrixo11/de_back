@@ -10,17 +10,26 @@ import { UserModule } from './user/user.module';
 import { PlanModule } from './plan/plan.module';
 import { VilleModule } from './ville/ville.module';
 import { QuartierModule } from './quartier/quartier.module';
-import { PaymentModule } from './payment/payment.module';
 import { ContactModule } from './contact/contact.module';
 import { BoostModule } from './boost/boost.module';
+import { NewsletterModule } from './newsletter/newsletter.module';
+import { PaymentModule } from './payment/payment.module';
 
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
+
+
   imports: [
     MongooseModule.forRoot(
-      // "mongodb+srv://omrixo:omri@cluster0.6ry9vgc.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-      "mongodb://localhost:27017/real"
-      ),
+
+      //Dev DataBase:
+      "mongodb://localhost:27017/real",
+      // Prod DataBase be careful:
+      // "mongodb://dali:OTSomriMedAli1997Dessa@51.75.26.134:27017/dessaVPSdb?authSource=admin"
+
+    ),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret: '1234567890@qwertyuiop',
@@ -32,11 +41,13 @@ import { BoostModule } from './boost/boost.module';
     PlanModule,
     VilleModule,
     QuartierModule,
-    PaymentModule,
     ContactModule,
     BoostModule,
+    NewsletterModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
+
 export class AppModule { }

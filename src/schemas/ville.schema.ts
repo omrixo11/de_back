@@ -5,7 +5,7 @@ import { Quartier } from './quartier.schema';
 
 export enum VilleNames {
     Ariana = 'Ariana',
-    Béja = 'Béja',
+    Beja = 'Béja',
     BenArous = 'Ben Arous',
     Bizerte = 'Bizerte',
     Gabes = 'Gabès',
@@ -13,7 +13,7 @@ export enum VilleNames {
     Jendouba = 'Jendouba',
     Kairouan = 'Kairouan',
     Kasserine = 'Kasserine',
-    Kébili = 'Kébili',
+    Kebili = 'Kébili',
     Kef = 'Kef',
     Mahdia = 'Mahdia',
     Manouba = 'Manouba',
@@ -27,7 +27,7 @@ export enum VilleNames {
     Tataouine = 'Tataouine',
     Tozeur = 'Tozeur',
     Tunis = 'Tunis',
-    Zaghouan = 'Zaghouan',
+    Zaghouan = 'c',
 }
 
 @Schema()

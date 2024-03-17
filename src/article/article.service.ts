@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
@@ -11,12 +11,26 @@ import { Types } from 'mongoose'; // Import the Types namespace
 import { PropertyType } from 'src/schemas/article.schema';
 import * as path from 'path';
 import * as Jimp from 'jimp';
+import { Quartier } from 'src/schemas/quartier.schema';
+import { Ville } from 'src/schemas/ville.schema';
+
+interface PopulatedUser {
+  _id: Types.ObjectId;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  profileImg: string;
+  // include other fields as needed
+}
 
 @Injectable()
 export class ArticleService {
   constructor(
     @InjectModel(Article.name) private articleModel: Model<Article>,
     @InjectModel(User.name) private userModel: Model<User>,
+    @InjectModel(Ville.name) private villeModel: Model<Ville>, // Assuming you have a Ville model
+    @InjectModel(Quartier.name) private quartierModel: Model<Quartier>, // Assuming you have a Quartier model
   ) { }
 
   async createArticle(
@@ -37,12 +51,12 @@ export class ArticleService {
     if (!user.plan) {
       // If the user does not have a plan, limit the number of posts to 2
       userArticlesCount = await this.articleModel.countDocuments({ user: userId }).exec();
-      if (userArticlesCount >= 2) {
-        throw new UnauthorizedException('User without a plan can only post 2 articles');
+      if (userArticlesCount >= 3) {
+        throw new UnauthorizedException('User without a plan can only post 3 articles');
       }
     } else {
       // Determine the maximum post limit for the user's plan
-      const maxPostsAllowed = user.plan.maxPosts;
+      const maxPostsAllowed = user.plan ? user.plan.maxPosts : 3;
       // Fetch the number of articles already posted by the user
       userArticlesCount = await this.articleModel.countDocuments({ user: userId }).exec();
       // Compare the number of articles posted with the maximum post limit
@@ -149,7 +163,8 @@ export class ArticleService {
 
     const articlesWithImages = articles.map((article) => {
       const images = article.images.map((filename) => {
-        return `https://dessa.ovh/media/articles-images/${filename}`;
+        // return `https://dessa.ovh/media/articles-images/${filename}`;
+        return `http://localhost:5001/media/articles-images/${filename}`;
       });
 
       return {
@@ -179,7 +194,8 @@ export class ArticleService {
 
     const articlesWithImages = articles.map((article) => {
       const images = article.images.map((filename) => {
-        return `https://dessa.ovh/media/articles-images/${filename}`;
+        // return `https://dessa.ovh/media/articles-images/${filename}`;
+        return `http://localhost:5001/media/articles-images/${filename}`;
       });
 
       return {
@@ -212,7 +228,8 @@ export class ArticleService {
     }
 
     const images = article.images.map((filename) => {
-      return `https://dessa.ovh/media/articles-images/${filename}`;
+      // return `https://dessa.ovh/media/articles-images/${filename}`;
+      return `http://localhost:5001/media/articles-images/${filename}`;
     });
 
     const articleWithImages = {
@@ -223,7 +240,6 @@ export class ArticleService {
     return articleWithImages;
   }
 
-
   async update(id: string, updateArticleDto: UpdateArticleDto) {
     return this.articleModel.findByIdAndUpdate(id, updateArticleDto);
   }
@@ -232,35 +248,34 @@ export class ArticleService {
     return this.articleModel.findByIdAndRemove(id).exec();
   }
 
-  async removeUserArticle(userId: string, articleId: string): Promise<Article> {
-    // Find the article by ID
-    const article = await this.articleModel.findById(articleId).exec();
+  async removeUserArticle(articleId: string, userId: string): Promise<void> {
+    // Convert string IDs to MongoDB ObjectId
+    const userObjectId = new Types.ObjectId(userId);
+    const articleObjectId = new Types.ObjectId(articleId);
 
+    // Find the article to ensure it exists and belongs to the user
+    const article = await this.articleModel.findOne({ _id: articleObjectId, user: userObjectId });
     if (!article) {
-      console.log('Article not found');
-      throw new NotFoundException('Article not found');
+      throw new NotFoundException(`Article with id ${articleId} not found or does not belong to the user`);
     }
 
-    // Check if the article belongs to the requesting user
-    if (article.user.toString() !== userId) {
-      console.log('Unauthorized: User cannot delete this article');
-      throw new UnauthorizedException('Unauthorized: User cannot delete this article');
+    // Before removing the article, delete its images from the filesystem
+    if (article.images && article.images.length > 0) {
+      await this.deleteArticleImages(article.images);
     }
 
-    // Remove the associated images
-    await this.deleteArticleImages(article.images);
+    // Remove the article
+    await this.articleModel.findByIdAndRemove(articleObjectId);
 
-    // Remove the article from the user's articles array
-    const user = await this.userModel.findById(userId).exec();
-    if (user) {
-      user.articles = user.articles.filter((userArticle) => userArticle.toString() !== articleId);
-      await user.save();
-    }
+    // Update the user's articles array
+    await this.userModel.findByIdAndUpdate(
+      userObjectId,
+      { $pull: { articles: articleObjectId } },
+      { new: true } // Return the modified document rather than the original by default
+    );
 
-    // Remove the article from the database
-    return this.articleModel.findByIdAndRemove(articleId).exec();
+    console.log(`Article ${articleId} removed from user ${userId}`);
   }
-
 
   private async deleteArticleImages(images: string[]): Promise<void> {
     const mediaFolderPath = path.join(__dirname, '..', '..', 'media', 'articles-images');
@@ -276,6 +291,22 @@ export class ArticleService {
         console.error(`Error deleting image ${imageFileName}: ${error.message}`);
       }
     }
+  }
+
+  private appendImageUrls(articles: Article[]): any[] {
+    return articles.map(article => {
+      const images = article.images.map(filename => {
+        // Adjust the base URL as needed, depending on your environment
+        return `http://localhost:5001/media/articles-images/${filename}`;
+        // For production, you might switch to something like:
+        // return `https://dessa.ovh/media/articles-images/${filename}`;
+      });
+
+      return {
+        ...article.toJSON(),
+        images,
+      };
+    });
   }
 
   async searchArticles(searchQuery: string): Promise<Article[]> {
@@ -295,7 +326,7 @@ export class ArticleService {
 
       // Optionally, you can populate images and format the response similar to other methods
 
-      return articles;
+      return this.appendImageUrls(articles);
     } catch (error) {
       console.error('Error searching articles:', error);
       throw error;
@@ -339,23 +370,43 @@ export class ArticleService {
     if (!article) {
       throw new NotFoundException('Article not found');
     }
-
     return article.viewsCount;
   }
 
   async getTotalViewsCountForUser(userId: string): Promise<number> {
-    const userArticles = await this.articleModel.find({ user: userId }).exec();
+    // Fetch the user by ID
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      return 0;
+    }
+
+    // Ensure the user has articles
+    if (user.articles.length === 0) {
+      console.log('User has no articles:', userId);
+      return 0;
+    }
+
+    // Initialize total views count
     let totalViewsCount = 0;
 
-    for (const article of userArticles) {
-      totalViewsCount += article.viewsCount;
+    // Fetch each article by ID and sum their views count
+    for (const articleId of user.articles) {
+      const article = await this.articleModel.findById(articleId).exec();
+      if (article) {
+        totalViewsCount += article.viewsCount;
+      }
     }
     return totalViewsCount;
   }
 
   async countUserArticles(userId: string): Promise<number> {
-    const userArticlesCount = await this.articleModel.countDocuments({ user: userId }).exec();
-    return userArticlesCount;
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new NotFoundException(`User with id ${userId} not found`);
+    }
+    // console.log('User:', user); // Log the user object
+    // console.log('User articles count:', user.articles.length); // Log the count of user articles
+    return user.articles.length;
   }
 
   async countFavoriteArticles(userId: string): Promise<number> {
@@ -363,6 +414,8 @@ export class ArticleService {
     if (!user) {
       throw new NotFoundException(`User with id ${userId} not found`);
     }
+    // console.log('User:', user); // Log the user object
+    // console.log('Favorite articles count:', user.favoriteArticles.length); // Log the count of favorite articles
     return user.favoriteArticles.length;
   }
 
@@ -395,7 +448,8 @@ export class ArticleService {
       }
 
       const images = article.images.map((filename) => {
-        return `https://dessa.ovh/media/articles-images/${filename}`;
+        // return `https://dessa.ovh/media/articles-images/${filename}`;
+        return `http://localhost:5001/media/articles-images/${filename}`;
       });
 
       return {
@@ -409,61 +463,54 @@ export class ArticleService {
 
   async getTotalViewsByVilleForUser(userId: string): Promise<any[]> {
     const aggregationPipeline = [
-      { $match: { user: userId } },
+      { $match: { user: new Types.ObjectId(userId) } },
       { $group: { _id: '$ville', totalViews: { $sum: '$viewsCount' } } },
       {
         $lookup: {
-          from: 'villes', // Assuming your ville collection is named 'villes'
+          from: this.villeModel.collection.name, // Dynamically get the collection name
           localField: '_id',
           foreignField: '_id',
           as: 'villeDetails'
         }
       },
-      {
-        $unwind: '$villeDetails' // Deconstructs the 'villeDetails' array
-      },
+      { $unwind: '$villeDetails' },
       {
         $project: {
-          _id: 0, // Exclude the ville ID from the final projection
-          villeName: '$villeDetails.name', // Include the ville name
-          totalViews: 1 // Include the total views
+          villeName: '$villeDetails.name',
+          totalViews: 1
         }
       }
     ];
 
     const result = await this.articleModel.aggregate(aggregationPipeline).exec();
     return result;
-}
+  }
 
-async getTotalViewsByQuartierForUser(userId: string): Promise<any[]> {
-  const aggregationPipeline = [
-    { $match: { user: userId } },
-    { $group: { _id: '$quartier', totalViews: { $sum: '$viewsCount' } } },
-    {
-      $lookup: {
-        from: 'quartiers', // Assuming your quartier collection is named 'quartiers'
-        localField: '_id',
-        foreignField: '_id',
-        as: 'quartierDetails'
+  async getTotalViewsByQuartierForUser(userId: string): Promise<any[]> {
+    const aggregationPipeline = [
+      { $match: { user: new Types.ObjectId(userId) } },
+      { $group: { _id: '$quartier', totalViews: { $sum: '$viewsCount' } } },
+      {
+        $lookup: {
+          from: this.quartierModel.collection.name, // Dynamically get the collection name
+          localField: '_id',
+          foreignField: '_id',
+          as: 'quartierDetails'
+        }
+      },
+      { $unwind: '$quartierDetails' },
+      {
+        $project: {
+          quartierName: '$quartierDetails.name',
+          totalViews: 1
+        }
       }
-    },
-    { $unwind: '$quartierDetails' },
-    {
-      $project: {
-        _id: 0, // Exclude the quartier ID from the final projection
-        quartierName: '$quartierDetails.name', // Include the quartier name
-        totalViews: 1 // Include the total views
-      }
-    }
-  ];
+    ];
 
-  const result = await this.articleModel.aggregate(aggregationPipeline).exec();
-  return result.map(item => ({
-    quartierName: item.quartierName,
-    totalViews: item.totalViews
-  }));
-}
-
-
-
+    const result = await this.articleModel.aggregate(aggregationPipeline).exec();
+    return result.map(item => ({
+      quartierName: item.quartierName,
+      totalViews: item.totalViews
+    }));
+  }
 }

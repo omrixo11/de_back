@@ -126,3 +126,84 @@ export const confirmationEmailTemplate = (confirmationCode: string): string => {
     `;
   };
   
+  export const newsletterUpdateTemplate = (subject: string, title: string, content: string): string => {
+    return `
+      <!DOCTYPE html>
+      <html lang="fr">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Mise à jour de la Newsletter</title>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap">
+        <style>
+          body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+          }
+          .container {
+            max-width: 600px;
+            margin: auto;
+            background: linear-gradient(135deg, #004ca3, #0065cc, #007bff);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            color: #ffffff;
+          }
+          .header {
+            padding: 10px;
+            text-align: center;
+            background: linear-gradient(135deg, #0069ff, #2a82ff);
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+          }
+          .header h2 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+            color: #ffffff; 
+          }
+          .content {
+            padding: 20px;
+            text-align: left;
+            line-height: 1.6;
+            background-color: #ffffff;
+            color: #000000; 
+            border-top: 5px solid #0069ff;
+          }
+          .footer {
+            background-color: #f0f0f0;
+            text-align: center;
+            padding: 10px;
+            font-size: 0.8em;
+            color: #333;
+          }
+          .social-links p {
+            margin: 10px 0;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h2>${subject}</h2>
+          </div>
+          <div class="content">
+           <h4>${title}</h4>
+            <p>${content}</p>
+          </div>
+          <div class="footer">
+            <div class="social-links">
+              <p>Suivez-nous sur <a href="https://www.facebook.com/profile.php?id=61556276108446">Facebook</a> et <a href="https://www.instagram.com/dessa.tn/">Instagram</a></p>
+            </div>
+           <p>Ceci est un e-mail automatique, veuillez ne pas répondre.</p>
+           <a href="https://dessa.tn">dessa.tn</a>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+  };
+  
+  

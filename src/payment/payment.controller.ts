@@ -1,28 +1,55 @@
-// payment.controller.ts
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException, HttpException, HttpStatus } from '@nestjs/common';
 import { PaymentService } from './payment.service';
+import { CreatePaymentDto } from './dto/create-payment.dto';
+import { UpdatePaymentDto } from './dto/update-payment.dto';
 
-@Controller('payments')
+@Controller('payment')
 export class PaymentController {
-  constructor(private readonly paymentService: PaymentService) {}
+  constructor(private readonly paymentService: PaymentService) { }
 
-  @Post('initiate')
-  async initiatePayment(@Body() paymentData: any): Promise<any> {
+  @Post('/callback')
+  async handlePaymentCallback(@Body() callbackData: any) {
+    if (!callbackData.success) {
+      return { message: 'Payment processing failed' };
+    }
+
+    const { paymentId, paymentType } = callbackData;
+
     try {
-      const paymentResponse = await this.paymentService.initiatePayment(paymentData);
-      return { success: true, data: paymentResponse };
+      switch (paymentType) {
+        case 'plan':
+          // Confirm plan purchase
+          await this.paymentService.confirmPaymentSuccessById(paymentId);
+          break;
+        case 'boost':
+          // Confirm boost purchase
+          await this.paymentService.confirmBoostPaymentSuccess(paymentId);
+          break;
+        default:
+          throw new BadRequestException('Invalid payment type');
+      }
+
+      return { message: 'Payment processed successfully' };
     } catch (error) {
-      return { success: false, error: error.message };
+      console.error('Error processing payment callback:', error);
+      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
-  @Get(':paymentId')
-  async getPaymentDetails(@Param('paymentId') paymentId: string): Promise<any> {
-    try {
-      const paymentDetails = await this.paymentService.getPaymentDetails(paymentId);
-      return { success: true, data: paymentDetails };
-    } catch (error) {
-      return { success: false, error: error.message };
+
+  @Post('/confirm-by-id')
+  async confirmPaymentById(@Body() body: { paymentId: string, success: boolean }) {
+    if (!body.paymentId) {
+      throw new BadRequestException('Payment ID is required');
+    }
+    if (body.success) {
+      await this.paymentService.confirmPaymentSuccessById(body.paymentId);
+      // Optionally, return a success message or the updated payment record
+      return { message: 'Payment confirmed successfully' };
+    } else {
+      // Handle failure case as needed
+      return { message: 'Payment confirmation failed' };
     }
   }
+
 }

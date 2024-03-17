@@ -16,7 +16,7 @@ COPY . .
 # Build the application
 RUN npm run build
 
-# Your application runs on port 3000. Use the EXPOSE instruction to have it mapped by the docker daemon
+# Your application runs on port 5001. Use the EXPOSE instruction to have it mapped by the docker daemon
 EXPOSE 5001
 
 # Define the command to run the app

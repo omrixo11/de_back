@@ -25,5 +25,10 @@ export class CreateUserDto {
     @IsPhoneNumber(null, { message: 'Invalid phone number' })
     phoneNumber: string;
 
+    profileImg: string;
+
+
+
+
     confirmationCode: string = null;
 }

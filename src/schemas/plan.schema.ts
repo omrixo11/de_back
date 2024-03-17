@@ -18,7 +18,7 @@ export class Plan extends Document {
 
     @Prop({ required: true, min: 0 })
     monthPrice: number;
-    
+
     @Prop({ required: true, min: 0 })
     yearPrice: number;
 
@@ -28,7 +28,7 @@ export class Plan extends Document {
     @Prop({ required: true })
     description: string;
 
-    @Prop({ })
+    @Prop({})
     planFeatures: PlanFeature[];
 
 }

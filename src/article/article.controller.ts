@@ -1,12 +1,11 @@
 // In article.controller.ts
 
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFiles, Request, UseGuards, Query, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFiles, Request, UseGuards, Query, NotFoundException, Res } from '@nestjs/common';
 import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from 'src/auth/user/user-auth.middleware';
-import { SearchArticlesDto } from './dto/search-article.dto';
 
 @Controller('articles')
 export class ArticleController {
@@ -108,8 +107,6 @@ export class ArticleController {
     return this.articleService.getTotalViewsByQuartierForUser(userId);
   }
 
-
-
   @Patch(':id/increment-views')
   incrementViewsCount(@Param('id') id: string) {
     return this.articleService.incrementViewsCount(id);
@@ -120,16 +117,15 @@ export class ArticleController {
     return this.articleService.update(id, updateArticleDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.articleService.remove(id);
-  }
+  // @Delete(':id')
+  // remove(@Param('id') id: string) {
+  //   return this.articleService.remove(id);
+  // }
 
   @Delete(':id/user-article')
   @UseGuards(JwtAuthGuard)
   removeUserArticle(@Param('id') id: string, @Request() req: any) {
     const userId = req.user._id;
-    return this.articleService.removeUserArticle(userId, id);
+    return this.articleService.removeUserArticle(id, userId);
   }
-
 }
