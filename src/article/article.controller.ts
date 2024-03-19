@@ -57,6 +57,11 @@ export class ArticleController {
     return this.articleService.findUserArticles(userId);
   }
 
+  @Get(':userId/articles')
+  findUserWithArticles(@Param('userId') userId: string) {
+    return this.articleService.findUserWithArticles(userId);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.articleService.findOne(id);

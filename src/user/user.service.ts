@@ -172,10 +172,19 @@ export class UserService {
       subscriptionEndDate.setMonth(subscriptionEndDate.getMonth() + 1);
     }
 
+    const VAT_RATE = 0.19; // 19% VAT
+
+    // Calculate the total amount including VAT
+    const baseAmount = isYearlyBilling ? plan.yearPrice : plan.monthPrice;
+    const totalAmountWithVAT = baseAmount + (baseAmount * VAT_RATE);
+
+    // Round the total amount to 2 decimal places and convert it back to a number
+    const roundedAmountWithVAT = parseFloat(totalAmountWithVAT.toFixed(2));
+
     const paymentDetails: CreatePaymentDto = {
       userId: userId,
       planId: planId,
-      amount: isYearlyBilling ? plan.yearPrice : plan.monthPrice,
+      amount: roundedAmountWithVAT,
       status: 'pending',
       transactionId: transactionId,
       paymentMethod: 'credit_card',

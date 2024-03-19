@@ -200,4 +200,5 @@ export class Article extends Document {
 
 }
 
+
 export const ArticleSchema = SchemaFactory.createForClass(Article);

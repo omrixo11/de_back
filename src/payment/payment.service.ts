@@ -71,10 +71,6 @@ export class PaymentService {
       throw new BadRequestException('This payment has already been confirmed');
     }
 
-    // Update the payment status to 'success'
-    payment.status = 'success'
-    await payment.save();
-
     // Retrieve the user associated with the payment
     const user = await this.userModel.findById(payment.userId).exec();
     if (!user) {
@@ -89,15 +85,19 @@ export class PaymentService {
 
     let startDate = user.subscriptionStartDate ? new Date(user.subscriptionStartDate) : new Date();
     if (isNaN(startDate.getTime())) {
-        startDate = new Date(); 
+      startDate = new Date();
     }
 
     let endDate = new Date(startDate);
     if (payment.isYearlyBilling) {
-        endDate.setFullYear(endDate.getFullYear() + 1);
+      endDate.setFullYear(endDate.getFullYear() + 1);
     } else {
-        endDate.setMonth(endDate.getMonth() + 1);
+      endDate.setMonth(endDate.getMonth() + 1);
     }
+
+    // Update the payment status to 'success'
+    payment.status = 'success'
+    await payment.save();
 
     user.subscriptionStartDate = new Date();
     user.subscriptionEndDate = endDate;
@@ -105,6 +105,7 @@ export class PaymentService {
     user.isOnPlan = true;
     user.planStatus = 'active'
     user.maxPosts = plan.maxPosts;
+    
     await user.save();
     return payment;
   }

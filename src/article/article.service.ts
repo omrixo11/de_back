@@ -11,6 +11,7 @@ import { Types } from 'mongoose'; // Import the Types namespace
 import { PropertyType } from 'src/schemas/article.schema';
 import * as path from 'path';
 import * as Jimp from 'jimp';
+import * as fs from 'fs-extra'; 
 import { Quartier } from 'src/schemas/quartier.schema';
 import { Ville } from 'src/schemas/ville.schema';
 
@@ -207,6 +208,47 @@ export class ArticleService {
     return articlesWithImages;
   }
 
+  async findUserWithArticles(userId: string): Promise<any> {
+    const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new NotFoundException(`User with id ${userId} not found`);
+    }
+
+    // Find articles by this user
+    const articles = await this.articleModel
+      .find({ user: new Types.ObjectId(userId) })
+      .populate('user', 'firstName lastName profileImg')
+      .populate('ville')
+      .populate('quartier')
+      .sort({ createdAt: -1 })
+      .exec();
+
+    // Process images for each article
+    const articlesWithImages = await Promise.all(articles.map(async (article) => {
+      if (!article.images || article.images.length === 0) {
+        // Placeholder for logic to handle articles without images
+      } else {
+        // Process and set the image URLs for the article
+        article.images = await Promise.all(article.images.map(async (filename) => {
+          const imagePath = path.join(__dirname, '..', '..', 'media', 'articles-images', filename);
+          // Here, you would process the image if needed and return the URL
+          // For simplicity, we're just returning a path that would be replaced with a real URL
+          return `http://localhost:5001/media/articles-images/${filename}`;
+          //return `https://dessa.ovh/media/articles-images/${filename}`;
+        }));
+      }
+
+      return article.toObject({ virtuals: true });
+    }));
+
+    // Combine user data with their articles
+    return {
+      ...user.toObject(),
+      articles: articlesWithImages,
+    };
+  }
+
+
   async findAll(): Promise<Article[]> {
     return this.articleModel.find().exec();
   }
@@ -321,6 +363,7 @@ export class ArticleService {
         .populate('user')
         .populate('ville')
         .populate('quartier')
+        .populate('boost')
         .sort({ createdAt: -1 })
         .exec();
 
@@ -424,10 +467,9 @@ export class ArticleService {
     const queryConditions: any = {
       ville,
       quartier,
-      propertyType: { $in: [propertyType] }, // Assuming propertyType is a single value and not an array in this context
+      propertyType: { $in: [propertyType] }, 
     };
-
-    // Exclude the current article from the results if an ID is provided
+  
     if (currentArticleId) {
       queryConditions._id = { $ne: currentArticleId };
     }
@@ -437,13 +479,12 @@ export class ArticleService {
       .populate('user')
       .populate('ville')
       .populate('quartier')
+      .populate('boost')
       .sort({ createdAt: -1 })
       .exec();
 
-    // Process each article to ensure it has images
     const articlesWithImages = await Promise.all(similarArticles.map(async (article) => {
       if (!article.images || article.images.length === 0) {
-
         article.images = await this.saveArticleImages([]);
       }
 
@@ -467,7 +508,7 @@ export class ArticleService {
       { $group: { _id: '$ville', totalViews: { $sum: '$viewsCount' } } },
       {
         $lookup: {
-          from: this.villeModel.collection.name, // Dynamically get the collection name
+          from: this.villeModel.collection.name,
           localField: '_id',
           foreignField: '_id',
           as: 'villeDetails'
