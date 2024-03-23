@@ -38,17 +38,17 @@ bootstrap();
 // async function bootstrap() {
 //   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-//   // const pcIpAddress = '102.152.215.199';
-//   // const allowedOrigins = [
-//   //   'https://dessa.tn',
-//   //   'https://www.dessa.tn',
-//   //   `http://${pcIpAddress}`,
-//   //   `https://${pcIpAddress}`,
-//   // ];
+//   const pcIpAddress = '102.152.215.199';
+//   const allowedOrigins = [
+//     'https://dessa.tn',
+//     'https://www.dessa.tn',
+//     `http://${pcIpAddress}`,
+//     `https://${pcIpAddress}`,
+//   ];
 
-//   // app.enableCors({
-//   //   origin: allowedOrigins,
-//   // });
+//   app.enableCors({
+//     origin: allowedOrigins,
+//   });
 
 //   const staticAssetsPath = path.join(__dirname, '..','media');
 //   app.useStaticAssets(staticAssetsPath, {

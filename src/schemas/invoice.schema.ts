@@ -1,8 +1,6 @@
 // invoice.model.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { User } from './user.schema';
-import { Plan } from './plan.schema';
 
 export type InvoiceDocument = Invoice & Document;
 
@@ -12,26 +10,20 @@ export class Invoice {
   @Prop({ required: true })
   invoiceNumber: string;
 
-  @Prop({ type: String, ref: 'User', required: true })
-  user: string;
-
-  @Prop({ type: String, ref: 'Plan', required: true })
-  Plan: string;
+  @Prop({ required: true })
+  userFirstName: string;
 
   @Prop({ required: true })
-  dateIssued: Date;
+  userLastName: string;
+
+  @Prop({ type: String, required: true })
+  description: string;
 
   @Prop({ required: true })
-  dueDate: Date;
-
-  @Prop({ required: true })
-  paymentDate: Date;
+  date: Date;
 
   @Prop({ required: true })
   amount: number;
-
-  @Prop({ default: false })
-  isPaid: boolean;
 
 }
 

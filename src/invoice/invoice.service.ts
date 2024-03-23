@@ -1,26 +1,46 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
+import { Invoice, InvoiceDocument } from 'src/schemas/invoice.schema';
 
 @Injectable()
 export class InvoiceService {
-  create(createInvoiceDto: CreateInvoiceDto) {
-    return 'This action adds a new invoice';
+  constructor(
+    @InjectModel(Invoice.name) private invoiceModel: Model<InvoiceDocument>,
+  ) {}
+
+  async create(createInvoiceDto: CreateInvoiceDto): Promise<Invoice> {
+    const newInvoice = new this.invoiceModel(createInvoiceDto);
+    return newInvoice.save();
   }
 
-  findAll() {
-    return `This action returns all invoice`;
+  async findAll(): Promise<Invoice[]> {
+    return this.invoiceModel.find().exec();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} invoice`;
+  async findOne(id: number): Promise<Invoice> {
+    const invoice = await this.invoiceModel.findById(id).exec();
+    if (!invoice) {
+      throw new NotFoundException(`Invoice with ID ${id} not found`);
+    }
+    return invoice;
   }
 
-  update(id: number, updateInvoiceDto: UpdateInvoiceDto) {
-    return `This action updates a #${id} invoice`;
+  async update(id: number, updateInvoiceDto: UpdateInvoiceDto): Promise<Invoice> {
+    const updatedInvoice = await this.invoiceModel.findByIdAndUpdate(id, updateInvoiceDto, { new: true }).exec();
+    if (!updatedInvoice) {
+      throw new NotFoundException(`Invoice with ID ${id} not found`);
+    }
+    return updatedInvoice;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} invoice`;
+  async remove(id: number): Promise<any> {
+    const deletedInvoice = await this.invoiceModel.findByIdAndRemove(id).exec();
+    if (!deletedInvoice) {
+      throw new NotFoundException(`Invoice with ID ${id} not found`);
+    }
+    return deletedInvoice;
   }
 }

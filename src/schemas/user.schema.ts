@@ -5,6 +5,7 @@ import { Document, Types } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { Article, ArticleSchema } from './article.schema';
 import { Plan } from './plan.schema';
+import { Invoice } from './invoice.schema';
 
 export enum BillingCycle {
   Monthly = 'monthly',
@@ -85,7 +86,7 @@ export class User extends Document {
   @Prop({ type: Types.ObjectId, ref: 'Plan', default: null })
   plan: Plan;
 
-  @Prop({ default: 0 })
+  @Prop({ default: 5 })
   maxPosts: number;
 
   @Prop({})
@@ -103,6 +104,10 @@ export class User extends Document {
 
   @Prop({ enum: BillingCycle, default: BillingCycle.Monthly })
   billingCycle: BillingCycle;
+
+  //ivoices
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Invoice' }] })
+  invoices: Types.ObjectId[] | Invoice[];
 
   //role
   @Prop({ type: [String], default: ['user'] })

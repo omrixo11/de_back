@@ -20,7 +20,8 @@ export class UserAuthService {
   ) { }
 
   async validateUser(email: string, password: string): Promise<any> {
-    const user = await this.userService.findByEmail(email);
+
+    const user = await this.userService.findByEmail(email)
 
     if (user && (await bcrypt.compare(password, user.password))) {
       let userObject = user.toObject();
@@ -36,12 +37,14 @@ export class UserAuthService {
 
       const token = this.generateToken(result);
 
-  
+
       await user.populate('plan');
+      await user.populate('invoices');
+
       const finalResult = {
         ...result,
-        profileImg: profileImageUrl, 
-        token, 
+        profileImg: profileImageUrl,
+        token,
       };
       const jsonResponse = JSON.stringify(finalResult);
       return finalResult;
@@ -69,9 +72,9 @@ export class UserAuthService {
     const token = this.generateToken(result);
 
     // Populate the user's plan after creating the user
-    await newUser.populate('plan');
-
-
+    await newUser.populate('plan')
+    await newUser.populate('invoices')
+      
     return { token, ...result };
   }
 

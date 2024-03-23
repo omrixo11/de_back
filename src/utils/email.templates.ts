@@ -1,6 +1,6 @@
 // email-templates.ts
 export const confirmationEmailTemplate = (confirmationCode: string): string => {
-    return `
+  return `
     <!DOCTYPE html>
     <html lang="fr">
     <head>
@@ -60,10 +60,10 @@ export const confirmationEmailTemplate = (confirmationCode: string): string => {
     </html>
     
     `;
-  };
-  
-  export const passwordResetEmailTemplate = (resetToken: string): string => {
-    return `
+};
+
+export const passwordResetEmailTemplate = (resetToken: string): string => {
+  return `
 
     <!DOCTYPE html>
     <html lang="fr">
@@ -124,10 +124,10 @@ export const confirmationEmailTemplate = (confirmationCode: string): string => {
     </body>
     </html>
     `;
-  };
-  
-  export const newsletterUpdateTemplate = (subject: string, title: string, content: string): string => {
-    return `
+};
+
+export const newsletterUpdateTemplate = (subject: string, title: string, content: string): string => {
+  return `
       <!DOCTYPE html>
       <html lang="fr">
       <head>
@@ -204,6 +204,108 @@ export const confirmationEmailTemplate = (confirmationCode: string): string => {
       </body>
       </html>
     `;
-  };
-  
-  
+
+
+
+};
+
+// Add this to your email-templates.ts
+
+export const invoiceEmailTemplate = (invoice: { userFirstName: string, invoiceNumber: string, amount: number, date: string, description: string }): string => {
+  return `
+  <!DOCTYPE html>
+  <html lang="fr">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facture</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'Poppins', sans-serif;
+        background-color: #ffffff;
+        margin: 0;
+        padding: 40px;
+      }
+      .container {
+        max-width: 800px;
+        margin: auto;
+        background-color: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+      }
+      .header {
+        background-color: #007bff;
+        color: #ffffff;
+        padding: 20px 40px;
+        text-align: center;
+        border-bottom: 1px solid #0069d9;
+      }
+      .header h1 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 600;
+      }
+      .body {
+        padding: 20px 40px;
+        background-color: #ffffff;
+        color: #212529;
+      }
+      .invoice-details {
+        background-color: #e9ecef;
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 25px;
+      }
+      .invoice-details p {
+        margin: 5px 0;
+      }
+      .footer {
+        text-align: center;
+        padding: 15px 0;
+        background-color: #f8f9fa;
+        color: #6c757d;
+        font-size: 14px;
+      }
+      .footer p {
+        margin: 0;
+      }
+      .company-details p {
+        font-size: 0.8em;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Facture</h1>
+      </div>
+      <div class="body">
+        <p>Salut ${invoice.userFirstName},</p>
+        <p>Votre paiement a été effectué avec succès.</p>
+        <div class="invoice-details">
+          <p>Numéro de facture : ${invoice.invoiceNumber}</p>
+          <p>Montant : ${invoice.amount} TND</p>
+          <p>Date : ${invoice.date}</p>
+          <p>Description : ${invoice.description}</p>
+        </div>
+      </div>
+      <div class="footer">
+        <p>Ce message est généré automatiquement, merci de ne pas y répondre.</p>
+        <p><a href="https://www.dessa.tn" style="color: #007bff;">dessa.tn</a></p>
+        <div class="company-details" style="margin-top: 20px;">
+          <p>OTS - Omri Tech Solutions</p>
+          <p>27, AV Habib Bourguiba Ariana - 2080</p>
+          <p>+216 94 94 10 88</p>
+        </div>
+      </div>
+    </div>
+  </body>
+  </html>
+  `;
+  ;
+};
+
+

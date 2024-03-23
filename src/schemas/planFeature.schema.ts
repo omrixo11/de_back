@@ -10,6 +10,9 @@ export class PlanFeature extends Document {
     @Prop({ required: true })
     description: string;
 
+    @Prop({ required: true })
+    isIncluded: boolean 
+
 }
 
 export const PlanFeatureSchema = SchemaFactory.createForClass(PlanFeature);

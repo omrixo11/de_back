@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { GiftCard, GiftCardSchema } from 'src/schemas/giftCard.schema';
+import { GiftCard, GiftCardSchema, GiftCardStatus } from 'src/schemas/giftCard.schema';
 import { CreateGiftCardDto } from './dto/create-gift-card.dto';
 import { UpdateGiftCardDto } from './dto/update-gift-card.dto';
+import { Cron } from '@nestjs/schedule';
 
 @Injectable()
 export class GiftCardService {
@@ -42,4 +43,14 @@ export class GiftCardService {
       throw new NotFoundException(`Gift card with id ${id} not found`);
     }
   }
+
+  @Cron('0 0 * * *') 
+  async checkAndExpireGiftCards() {
+    const now = new Date();
+    await this.giftCardModel.updateMany(
+      { expirationDate: { $lt: now }, status: { $ne: GiftCardStatus.Expired } },
+      { $set: { status: GiftCardStatus.Expired } }
+    );
+  }
+  
 }

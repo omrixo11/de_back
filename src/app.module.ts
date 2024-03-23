@@ -18,6 +18,7 @@ import { PaymentModule } from './payment/payment.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { GiftCardModule } from './gift-card/gift-card.module';
+import { AdsBannersModule } from './ads-banners/ads-banners.module';
 
 @Module({
 
@@ -47,6 +48,7 @@ import { GiftCardModule } from './gift-card/gift-card.module';
     NewsletterModule,
     PaymentModule,
     GiftCardModule,
+    AdsBannersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -35,6 +35,9 @@ export class Payment extends Document {
     @Prop({ type: Types.ObjectId, ref: 'Boost' })
     boostId: Types.ObjectId;
 
+    @Prop({ type: Types.ObjectId, ref: 'AdsBanner' })
+    adsBannerId: Types.ObjectId;
+
     @Prop({ })
     isYearlyBilling: boolean;
 

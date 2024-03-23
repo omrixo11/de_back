@@ -234,7 +234,7 @@ export class ArticleService {
           // Here, you would process the image if needed and return the URL
           // For simplicity, we're just returning a path that would be replaced with a real URL
           return `http://localhost:5001/media/articles-images/${filename}`;
-          //return `https://dessa.ovh/media/articles-images/${filename}`;
+          // return `https://dessa.ovh/media/articles-images/${filename}`;
         }));
       }
 
@@ -338,9 +338,7 @@ export class ArticleService {
   private appendImageUrls(articles: Article[]): any[] {
     return articles.map(article => {
       const images = article.images.map(filename => {
-        // Adjust the base URL as needed, depending on your environment
         return `http://localhost:5001/media/articles-images/${filename}`;
-        // For production, you might switch to something like:
         // return `https://dessa.ovh/media/articles-images/${filename}`;
       });
 

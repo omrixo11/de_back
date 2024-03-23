@@ -15,7 +15,8 @@ import { CreatePaymentDto } from 'src/payment/dto/create-payment.dto';
 import { Boost } from 'src/schemas/boost.schema';
 import { CreateBoostDto } from 'src/boost/dto/create-boost.dto';
 import * as cron from 'node-cron';
-
+import { AdsBannersService } from 'src/ads-banners/ads-banners.service';
+import { CreateAdsBannerDto } from 'src/ads-banners/dto/create-ads-banner.dto';
 
 @Injectable()
 export class UserService {
@@ -25,7 +26,8 @@ export class UserService {
     @InjectModel(Plan.name) private planModel: Model<PlanDocument>,
     @InjectModel(Article.name) private articleModel: Model<Article>,
     @InjectModel(Boost.name) private boostModel: Model<Boost>,
-
+    
+    private adsBannersService: AdsBannersService,
     private paymentService: PaymentService,
 
   ) {
@@ -44,12 +46,14 @@ export class UserService {
   async findAll(): Promise<User[]> {
     return this.userModel.find()
       .populate('plan')
+      .populate('invoices')
       .exec();
   }
 
   async findOne(id: string): Promise<User> {
     return this.userModel.findById(id)
       .populate('plan')
+      .populate('invoices')
       .exec();
   }
 
@@ -64,14 +68,13 @@ export class UserService {
   async findByEmail(email: string): Promise<User | null> {
     return this.userModel.findOne({ email })
       .populate('plan')
+      .populate('invoices')
       .exec();
   }
 
   async findByResetToken(resetToken: string): Promise<User | null> {
     return this.userModel.findOne({ resetPasswordToken: resetToken }).exec();
   }
-
-
 
   async toggleFavorite(userId: string, articleId: string): Promise<User> {
     const userObjectId = new Types.ObjectId(userId); // Ensure ObjectId format
@@ -102,7 +105,7 @@ export class UserService {
     }
 
     // Fetch and return the updated user document
-    const updatedUser = await this.userModel.findById(userObjectId).populate('plan').exec();
+    const updatedUser = await this.userModel.findById(userObjectId).populate('plan').populate('invoices').exec();
     return updatedUser;
   }
 
@@ -261,4 +264,35 @@ export class UserService {
       console.log(`Reset subscription for user ${user.email}`);
     }
   }
+
+
+  async initiateAdsBannerPurchase(userId: string, createAdsBannerDto: CreateAdsBannerDto, imageFile: Express.Multer.File): Promise<any> {
+    const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found.`);
+    }
+
+    
+    const savedImageFileName = await this.adsBannersService.saveBannerImage(imageFile);
+    const updatedCreateAdsBannerDto = { ...createAdsBannerDto, image: savedImageFileName, userId: userId };
+    const adsBanner = await this.adsBannersService.create(updatedCreateAdsBannerDto);
+
+    console.log('Creating ads banner with:', updatedCreateAdsBannerDto);
+
+    const transactionId = "unique_transaction_id"; 
+    const paymentDetails: CreatePaymentDto = {
+      userId,
+      adsBannerId: adsBanner._id.toString(),
+      amount: createAdsBannerDto.price,
+      status: 'pending', 
+      transactionId: transactionId,
+      paymentMethod: 'credit_card', 
+    };
+
+    const paymentRecord = await this.paymentService.create(paymentDetails);
+
+    // You can adjust the response based on your needs. Here, returning the payment record as an example
+    return paymentRecord;
+}
+
 }

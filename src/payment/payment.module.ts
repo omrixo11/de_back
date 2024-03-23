@@ -7,6 +7,10 @@ import { Plan, PlanSchema } from 'src/schemas/plan.schema';
 import { UserModule } from 'src/user/user.module';
 import { Boost, BoostSchema } from 'src/schemas/boost.schema';
 import { Article, ArticleSchema } from 'src/schemas/article.schema';
+import { AdsBanner, AdsBannerSchema } from 'src/schemas/adsBanner';
+import { InvoiceModule } from 'src/invoice/invoice.module';
+import { NodeMailerService } from 'src/utils/node.mailer';
+import { GiftCard, GiftCardSchema } from 'src/schemas/giftCard.schema';
 
 @Module({
   imports: [
@@ -15,11 +19,14 @@ import { Article, ArticleSchema } from 'src/schemas/article.schema';
       { name: Plan.name, schema: PlanSchema },
       { name: Boost.name, schema: BoostSchema },
       { name: Article.name, schema: ArticleSchema },
+      { name: AdsBanner.name, schema: AdsBannerSchema },
+      { name: GiftCard.name, schema: GiftCardSchema },
     ]),
     forwardRef(() => UserModule),
+    forwardRef(() => InvoiceModule),
   ],
   controllers: [PaymentController],
-  providers: [PaymentService],
+  providers: [PaymentService, NodeMailerService],
   exports: [PaymentService],
 })
 export class PaymentModule { }

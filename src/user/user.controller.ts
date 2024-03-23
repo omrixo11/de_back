@@ -1,4 +1,5 @@
-import { UseGuards, Controller, Get, Post, Body, Patch, Param, Delete, HttpException, HttpStatus } from '@nestjs/common';
+import { UseGuards, Controller, UploadedFile, UseInterceptors, Get, Post, Body, Patch, Param, Delete, HttpException, HttpStatus } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -6,6 +7,7 @@ import { JwtAuthGuard } from 'src/auth/user/user-auth.middleware';
 import { CreateBoostDto } from 'src/boost/dto/create-boost.dto';
 import { Roles } from 'src/auth/user/roles.decorator';
 import { RolesGuard } from 'src/auth/user/user-auth.roles';
+import { CreateAdsBannerDto } from 'src/ads-banners/dto/create-ads-banner.dto';
 
 @Controller('user')
 export class UserController {
@@ -18,7 +20,7 @@ export class UserController {
 
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin','user')
+  @Roles('admin', 'user')
   findAll() {
     return this.userService.findAll();
   }
@@ -87,6 +89,25 @@ export class UserController {
     } catch (error) {
       console.error('Toggle Favorite Error:', error);
       throw error;
+    }
+  }
+
+  @Post(':userId/ads-banners/purchase')
+  @UseInterceptors(FileInterceptor('image'))
+  async initiateAdsBannerPurchase(
+    @Param('userId') userId: string,
+    @Body() createAdsBannerDto: CreateAdsBannerDto,
+    @UploadedFile() image: Express.Multer.File
+  ) {
+    if (!image) {
+      throw new HttpException('Image file is required', HttpStatus.BAD_REQUEST);
+    }
+    try {
+      await this.userService.initiateAdsBannerPurchase(userId, createAdsBannerDto, image);
+      return { message: 'Ads banner purchase initiated successfully.' };
+    } catch (error) {
+      // You might want to handle different types of errors differently
+      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

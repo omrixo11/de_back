@@ -12,5 +12,7 @@ export class CreatePaymentDto {
     articleId?: string;
     boostId?: string;
     isYearlyBilling?: boolean;
+    adsBannerId?: string;
+
   }
   

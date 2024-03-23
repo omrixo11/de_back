@@ -25,6 +25,10 @@ export class PaymentController {
           // Confirm boost purchase
           await this.paymentService.confirmBoostPaymentSuccess(paymentId);
           break;
+        case 'adsbanner':
+          // Confirm boost purchase
+          await this.paymentService.confirmAdsBannerPaymentSuccess(paymentId);
+          break;
         default:
           throw new BadRequestException('Invalid payment type');
       }
@@ -49,6 +53,25 @@ export class PaymentController {
     } else {
       // Handle failure case as needed
       return { message: 'Payment confirmation failed' };
+    }
+  }
+
+  @Post('/use-gift-card')
+  async payWithGiftCard(@Body() body: { userId: string; giftCardCode: string }) {
+    if (!body.userId || !body.giftCardCode) {
+      throw new BadRequestException('UserId and GiftCardCode are required');
+    }
+
+    try {
+      const user = await this.paymentService.payWithGiftCard(body.userId, body.giftCardCode);
+      
+      return {
+        message: 'Gift card applied successfully',
+        user,
+      };
+    } catch (error) {
+      console.error('Error applying gift card:', error);
+      throw new BadRequestException(error.message);
     }
   }
 
