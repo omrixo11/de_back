@@ -272,7 +272,7 @@ export class UserAuthService {
     const imagePath = path.join(mediaFolderPath, imageFileName);
     await fsPromises.writeFile(imagePath, imageFile.buffer);
 
-    console.log('Media Folder Path:', mediaFolderPath);
+    // console.log('Media Folder Path:', mediaFolderPath);
 
     return imageFileName;
   }

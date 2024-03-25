@@ -56,7 +56,7 @@ bootstrap();
 //   });
 
 //   await app.listen(port);
-//   Logger.log(`Application is running on: http://localhost:${port}`);
+//   Logger.log(`Application is running on: ${port}`);
 //   console.log(`Serving static assets from: ${staticAssetsPath}`);
 // }
 

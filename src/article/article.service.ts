@@ -11,9 +11,12 @@ import { Types } from 'mongoose'; // Import the Types namespace
 import { PropertyType } from 'src/schemas/article.schema';
 import * as path from 'path';
 import * as Jimp from 'jimp';
-import * as fs from 'fs-extra'; 
+import * as fs from 'fs-extra';
 import { Quartier } from 'src/schemas/quartier.schema';
 import { Ville } from 'src/schemas/ville.schema';
+// const convert = require('heic-convert');
+
+const heicConvert = require('heic-convert');
 
 interface PopulatedUser {
   _id: Types.ObjectId;
@@ -25,6 +28,8 @@ interface PopulatedUser {
   // include other fields as needed
 }
 
+
+
 @Injectable()
 export class ArticleService {
   constructor(
@@ -33,6 +38,7 @@ export class ArticleService {
     @InjectModel(Ville.name) private villeModel: Model<Ville>, // Assuming you have a Ville model
     @InjectModel(Quartier.name) private quartierModel: Model<Quartier>, // Assuming you have a Quartier model
   ) { }
+
 
   async createArticle(
     createArticleDto: CreateArticleDto,
@@ -52,7 +58,7 @@ export class ArticleService {
     if (!user.plan) {
       // If the user does not have a plan, limit the number of posts to 2
       userArticlesCount = await this.articleModel.countDocuments({ user: userId }).exec();
-      if (userArticlesCount >= 3) {
+      if (userArticlesCount >= 4) {
         throw new UnauthorizedException('User without a plan can only post 3 articles');
       }
     } else {
@@ -93,58 +99,75 @@ export class ArticleService {
     return article.save();
   }
 
+
   private async saveArticleImages(imageFiles: Express.Multer.File[]): Promise<string[]> {
     const savedImages: string[] = [];
     const mediaFolderPath = path.join(__dirname, '..', '..', 'media', 'articles-images');
     const watermarkPath = path.join(__dirname, '..', '..', 'media', 'water-marks', 'waterMark1.png');
 
-    console.log('Media Folder Path:', mediaFolderPath);
-
     // Ensure the media folder exists
     await fsPromises.mkdir(mediaFolderPath, { recursive: true });
 
-    if (!imageFiles || !Array.isArray(imageFiles)) {
-      throw new Error('No valid image files provided.');
-    }
+    console.log(`Processing ${imageFiles.length} image(s)`);
 
     for (const imageFile of imageFiles) {
+
+      console.log(`Processing file: ${imageFile.originalname}`);
+
       if (!imageFile.buffer || !imageFile.originalname) {
-        console.error('Invalid image file:', imageFile);
-        continue; // Skip invalid image files
+        console.log('Invalid image file, skipping:', imageFile);
+        continue;
       }
 
-      const image = await Jimp.read(imageFile.buffer);
+      let imageBuffer = imageFile.buffer;
 
-      // Crop the image to a specific size (e.g., 270x250)
-      const targetWidth = 810;
-      const targetHeight = 750;
-      image.cover(targetWidth, targetHeight);
+      // Check and convert only if it's a HEIC file
+      if (imageFile.originalname.endsWith('.heic') || imageFile.originalname.endsWith('.HEIC')) {
+        console.log(`Converting .heic file: ${imageFile.originalname}`);
+        try {
+          imageBuffer = await heicConvert({
+            buffer: imageFile.buffer,
+            format: 'JPEG',
+            quality: 0.8,
+          });
+          console.log(`Conversion successful for: ${imageFile.originalname}`);
+        } catch (error) {
+          console.error(`Error converting ${imageFile.originalname}:`, error);
+          continue; // Skip this file if conversion fails
+        }
+      }
 
-      // Read the watermark image
-      const watermark = await Jimp.read(watermarkPath);
+      try {
+        const image = await Jimp.read(imageBuffer);
+        const targetWidth = 810;
+        const targetHeight = 750;
+        image.cover(targetWidth, targetHeight);
 
-      // Calculate the size of the watermark to cover the entire cropped image while maintaining the original aspect ratio
-      const watermarkWidth = image.getWidth();
-      const watermarkHeight = (watermarkWidth / watermark.getWidth()) * watermark.getHeight();
+        const watermark = await Jimp.read(watermarkPath);
+        const watermarkWidth = image.getWidth();
+        const watermarkHeight = (watermarkWidth / watermark.getWidth()) * watermark.getHeight();
+        watermark.resize(watermarkWidth, watermarkHeight);
 
-      // Resize watermark
-      watermark.resize(watermarkWidth, watermarkHeight);
+        const x = (image.getWidth() - watermark.getWidth()) / 2;
+        const y = (image.getHeight() - watermark.getHeight()) / 2;
+        image.composite(watermark, x, y);
 
-      // Composite the watermark onto the cropped image at the center
-      const x = (image.getWidth() - watermark.getWidth()) / 2;
-      const y = (image.getHeight() - watermark.getHeight()) / 2;
-      image.composite(watermark, x, y);
+        // Generate a new filename, ensuring JPEG extension
+        const outputFileExtension = '.jpg'; // Force JPEG extension for all images
+        const imageFileName = `${Date.now()}_${imageFile.originalname}`.replace(/\.[^/.]+$/, outputFileExtension);
+        const imagePath = path.join(mediaFolderPath, imageFileName);
 
-      const imageFileName = `${Date.now()}_${imageFile.originalname}`;
-      const imagePath = path.join(mediaFolderPath, imageFileName);
-
-      // Save the cropped image with watermark
-      await image.writeAsync(imagePath);
-      savedImages.push(imageFileName);
+        await image.writeAsync(imagePath);
+        savedImages.push(imageFileName);
+        console.log(`Processed and saved: ${imageFileName}`);
+      } catch (error) {
+        console.error(`Error processing ${imageFile.originalname}:`, error);
+      }
     }
 
     return savedImages;
   }
+
 
   async findAllWithImages(): Promise<Article[]> {
     const articles = await this.articleModel
@@ -328,7 +351,6 @@ export class ArticleService {
       try {
         // Delete the image file
         await fsPromises.unlink(imagePath);
-        console.log(`Deleted image: ${imageFileName}`);
       } catch (error) {
         console.error(`Error deleting image ${imageFileName}: ${error.message}`);
       }
@@ -465,9 +487,9 @@ export class ArticleService {
     const queryConditions: any = {
       ville,
       quartier,
-      propertyType: { $in: [propertyType] }, 
+      propertyType: { $in: [propertyType] },
     };
-  
+
     if (currentArticleId) {
       queryConditions._id = { $ne: currentArticleId };
     }
